@@ -25,9 +25,9 @@ export function Sidebar({ activeItem, onNavigate }: SidebarProps) {
   const items = [
     { id: 'dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
     { id: 'products', label: t('nav.products'), icon: Package },
-    { id: 'landing-pages', label: 'Landing pages', icon: MousePointer2 },
-    { id: 'ads-command', label: 'Ads Command', icon: Terminal },
-    { id: 'orders', label: 'Orders & Fullfillments', icon: ShoppingCart },
+    { id: 'landing-pages', label: t('nav.landing_pages'), icon: MousePointer2 },
+    { id: 'ads-command', label: t('nav.ads_command'), icon: Terminal },
+    { id: 'orders', label: t('nav.orders'), icon: ShoppingCart },
   ];
 
   return (
@@ -74,7 +74,7 @@ export function Sidebar({ activeItem, onNavigate }: SidebarProps) {
 
       <div className="px-8 mt-auto py-8">
         <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/5">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Storage</p>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('nav.storage')}</p>
           <div className="h-1.5 w-full bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden mb-2">
             <motion.div 
               initial={{ width: 0 }}

@@ -7,6 +7,7 @@ import { ProductSearch } from '@/components/views/product-search';
 import { ProductList } from '@/components/views/product-list';
 import { ProductDetail } from '@/components/views/product-detail';
 import { DashboardView } from '@/components/views/dashboard';
+import { LandingPagesView } from '@/components/views/landing-pages';
 import { Product } from '@/lib/mock-data';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAtom } from 'jotai';
@@ -55,12 +56,7 @@ export default function Home() {
 
     switch (activeTab) {
       case 'landing-pages':
-        return (
-          <ProductSearch 
-            key="search" 
-            onSelectProduct={handleSelectProduct} 
-          />
-        );
+        return <LandingPagesView key="landing-pages" />;
       case 'products':
         return (
           <ProductList 
@@ -88,7 +84,7 @@ export default function Home() {
   const getHeaderTitle = () => {
     if (isDetailView && selectedProduct) return selectedProduct.name;
     switch (activeTab) {
-      case 'landing-pages': return t('products.select_product');
+      case 'landing-pages': return t('landing_pages.portfolio');
       case 'products': return t('products.management');
       case 'dashboard': return t('nav.dashboard');
       default: return activeTab.charAt(0).toUpperCase() + activeTab.slice(1).replace('-', ' ');

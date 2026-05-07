@@ -119,10 +119,10 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
 
           <div className="bg-white dark:bg-[#0c0c0c] rounded-[48px] border border-gray-100 dark:border-white/5 p-10 shadow-sm dark:shadow-none">
             <div className="flex items-center justify-between mb-10">
-              <h3 className="font-black text-black dark:text-white uppercase tracking-tighter text-xl">Variant Groups</h3>
+              <h3 className="font-black text-black dark:text-white uppercase tracking-tighter text-xl">{t('products.variant_groups')}</h3>
               <button className="text-white dark:text-black font-black text-[10px] uppercase tracking-widest flex items-center gap-2 px-4 py-2 bg-black dark:bg-white rounded-full hover:opacity-80 transition-all">
                 <Plus size={14} />
-                Add Variant
+                {t('products.add_variant')}
               </button>
             </div>
             
@@ -143,7 +143,7 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
                         </div>
                         <div className="flex-1">
                           <h5 className="text-sm font-black text-black dark:text-white uppercase tracking-tight">{v.label}</h5>
-                          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Stock: {v.qty}</p>
+                          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">{t('products.stock')}: {v.qty}</p>
                         </div>
                         <div className="relative">
                           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-black text-xs">$</span>
@@ -161,7 +161,7 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
               
               <button className="w-full py-6 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-[32px] text-gray-400 flex items-center justify-center gap-3 font-black text-xs uppercase tracking-widest hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white transition-all">
                 <Plus size={20} />
-                New Variant Group
+                {t('products.new_variant_group')}
               </button>
             </div>
           </div>
@@ -171,7 +171,7 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
           <div className="bg-white dark:bg-[#0c0c0c] rounded-[48px] border border-gray-100 dark:border-white/5 p-10 shadow-sm dark:shadow-none">
             <div className="space-y-10">
               <div className="space-y-3">
-                <label className="text-[9px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.3em]">Product Name</label>
+                <label className="text-[9px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.3em]">{t('products.product_name')}</label>
                 <TextAnimate 
                   text={product.name}
                   type="char"
@@ -188,10 +188,10 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <label className="text-[9px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.3em]">Description</label>
+                  <label className="text-[9px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.3em]">{t('products.description')}</label>
                   <button className="text-[9px] font-black text-white dark:text-black uppercase tracking-widest flex items-center gap-2 bg-black dark:bg-white px-3 py-1.5 rounded-full hover:opacity-80 transition-all">
                     <Sparkles size={12} />
-                    AI Polish
+                    {t('products.ai_polish')}
                   </button>
                 </div>
                 <div className="relative">

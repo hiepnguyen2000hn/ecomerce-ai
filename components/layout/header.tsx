@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { 
+  ChevronDown,
   Search, 
   Bell, 
   Sun, 
@@ -30,6 +31,18 @@ export function Header({ title, breadcrumbs }: HeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+
+  React.useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setShowSearch((prev) => !prev);
+      }
+    };
+    document.addEventListener('keydown', down);
+    return () => document.removeEventListener('keydown', down);
+  }, []);
 
   return (
     <header className="h-24 flex items-center justify-between px-12 bg-white/80 dark:bg-[#080808]/80 backdrop-blur-xl sticky top-0 z-40 border-b border-gray-100 dark:border-white/5 transition-colors duration-300">
@@ -49,15 +62,16 @@ export function Header({ title, breadcrumbs }: HeaderProps) {
 
       <div className="flex items-center gap-6">
         {/* Search Bar */}
-        <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-gray-50 dark:bg-white/5 rounded-2xl border border-transparent focus-within:border-black/5 dark:focus-within:border-white/10 transition-all group w-64">
-          <Search size={16} className="text-gray-400 group-focus-within:text-black dark:group-focus-within:text-white transition-colors" />
-          <input 
-            type="text" 
-            placeholder="Search everything..." 
-            className="bg-transparent border-none outline-none text-xs font-medium placeholder:text-gray-400 w-full"
-          />
-          <span className="text-[10px] font-mono opacity-30">⌘K</span>
-        </div>
+        <button 
+          onClick={() => setShowSearch(true)}
+          className="hidden lg:flex items-center gap-3 px-4 py-2 bg-gray-50 dark:bg-white/5 rounded-2xl border border-transparent hover:border-black/5 dark:hover:border-white/10 transition-all group w-64 text-left"
+        >
+          <Search size={16} className="text-gray-400 group-hover:text-black dark:group-hover:text-white transition-colors" />
+          <span className="text-xs font-medium text-gray-400 flex-1">Search everything...</span>
+          <span className="text-[10px] font-mono opacity-30 select-none">⌘K</span>
+        </button>
+
+        <SearchPalette isOpen={showSearch} onClose={() => setShowSearch(false)} />
 
         <div className="h-8 w-px bg-gray-100 dark:bg-white/5 mx-2" />
 
@@ -65,10 +79,7 @@ export function Header({ title, breadcrumbs }: HeaderProps) {
         <div className="flex items-center gap-2">
           {/* Theme Toggle */}
           <button 
-            onClick={() => {
-              toggleTheme();
-              toast.success(theme === 'dark' ? 'Light Mode' : 'Dark Mode', { duration: 1500 });
-            }}
+            onClick={toggleTheme}
             className="p-3 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl transition-all text-gray-500 hover:text-black dark:hover:text-white relative group"
           >
             <div className="relative w-5 h-5">
@@ -140,6 +151,99 @@ export function Header({ title, breadcrumbs }: HeaderProps) {
         </div>
       </div>
     </header>
+  );
+}
+
+function SearchPalette({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+  const [query, setQuery] = useState('');
+  
+  const results = [
+    { id: 1, title: 'Luxury Watch Collection', category: 'Products', icon: <Package size={14} />, color: 'text-blue-500' },
+    { id: 2, title: 'Summer Campaign landing', category: 'Landing Pages', icon: <Sparkles size={14} />, color: 'text-purple-500' },
+    { id: 3, title: 'Customer analytics Q3', category: 'Dashboard', icon: <LayoutDashboard size={14} />, color: 'text-emerald-500' },
+    { id: 4, title: 'Order #88392 processing', category: 'Orders', icon: <ShoppingCart size={14} />, color: 'text-amber-500' },
+    { id: 5, title: 'Global Theme Settings', category: 'System', icon: <Settings size={14} />, color: 'text-gray-500' },
+  ].filter(item => item.title.toLowerCase().includes(query.toLowerCase()));
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+          />
+          <div className="fixed inset-0 z-[70] flex items-start justify-center pt-[15vh] px-4 pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95, filter: 'blur(10px)' }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
+              transition={{ type: "spring", damping: 25, stiffness: 400 }}
+              className="w-full max-w-2xl bg-white dark:bg-[#0c0c0c] border border-gray-200 dark:border-white/10 rounded-[2rem] shadow-[0_30px_60px_rgba(0,0,0,0.4)] overflow-hidden pointer-events-auto"
+            >
+              <div className="p-6 border-b border-gray-100 dark:border-white/5 flex items-center gap-4">
+                <Search size={22} className="text-gray-400" />
+                <input 
+                  autoFocus
+                  placeholder="What are you looking for?"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="bg-transparent border-none outline-none text-xl font-medium placeholder:text-gray-300 w-full"
+                />
+                <button 
+                  onClick={onClose}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-xl transition-all text-gray-400"
+                >
+                  <span className="text-[10px] font-mono leading-none">ESC</span>
+                </button>
+              </div>
+
+              <div className="max-h-[60vh] overflow-y-auto p-3">
+                {results.length > 0 ? (
+                  <div className="space-y-1">
+                    <p className="px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Search Results</p>
+                    {results.map((item, i) => (
+                      <motion.button
+                        key={item.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-all text-left group rounded-2xl"
+                      >
+                        <div className={cn("w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center transition-all duration-300 group-hover:scale-110", item.color)}>
+                          {item.icon}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-bold tracking-tight">{item.title}</p>
+                          <p className="text-[10px] font-mono opacity-30 uppercase tracking-widest mt-1">{item.category}</p>
+                        </div>
+                        <ChevronDown size={14} className="opacity-0 group-hover:opacity-30 -rotate-90 transition-all" />
+                      </motion.button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-20 text-center flex flex-col items-center gap-4 opacity-30 font-display italic">
+                    <p className="text-2xl font-black uppercase tracking-tighter">No signals found</p>
+                    <p className="text-xs uppercase tracking-widest">Adjust your search parameters</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 bg-gray-50 dark:bg-white/5 flex items-center justify-between text-[9px] font-mono opacity-40 px-8">
+                <div className="flex gap-4">
+                  <span><span className="bg-gray-200 dark:bg-white/10 px-1 rounded mr-1">↑↓</span> TO NAVIGATE</span>
+                  <span><span className="bg-gray-200 dark:bg-white/10 px-1 rounded mr-1">ENTER</span> TO OPEN</span>
+                </div>
+                <span>PRESS ESC TO CLOSE</span>
+              </div>
+            </motion.div>
+          </div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
 
