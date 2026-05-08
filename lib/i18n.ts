@@ -1,5 +1,7 @@
-import i18n from 'i18next';
+import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
+
+const i18n = i18next.createInstance();
 
 const resources = {
   en: {
@@ -30,7 +32,12 @@ const resources = {
         landing_pages: "Landing Pages",
         ads_command: "Ads Command",
         orders: "Orders & Fulfillment",
-        storage: "Storage"
+        storage: "Storage",
+        identity: "Identity",
+        preference: "Preference",
+        membership: "Membership",
+        logout: "Logout",
+        language: "Language"
       },
       products: {
         inventory: "Inventory",
@@ -128,23 +135,82 @@ const resources = {
         }
       }
     }
+  },
+  vi: {
+    translation: {
+      common: {
+        search: "Tìm kiếm...",
+        loading: "Đang tải...",
+        error: "Có lỗi xảy ra",
+        save: "Lưu thay đổi",
+        discard: "Hủy bỏ",
+        back: "Quay lại",
+        no_results: "Không tìm thấy kết quả",
+        advanced_filter: "Bộ lọc nâng cao",
+        add_manual: "Thêm sản phẩm thủ công",
+        lifecycle_status: "Trạng thái chu kỳ",
+        available_variants: "Biến thể có sẵn",
+        showing: "Hiển thị",
+        of: "của",
+        products: "Sản phẩm"
+      },
+      nav: {
+        dashboard: "Bảng điều khiển",
+        products: "Kho hàng",
+        sales: "Bán hàng",
+        customers: "Khách hàng",
+        settings: "Cài đặt",
+        help: "Trung tâm hỗ trợ",
+        landing_pages: "Trang đích",
+        ads_command: "Ads Command",
+        orders: "Đơn hàng & Vận chuyển",
+        storage: "Bộ nhớ",
+        identity: "Danh tính",
+        preference: "Sở thích",
+        membership: "Thành viên",
+        logout: "Đăng xuất",
+        language: "Ngôn ngữ"
+      }
+    }
+  },
+  ro: {
+    translation: {
+      common: {
+        search: "Căutare...",
+        loading: "Se încarcă...",
+        error: "A apărut o eroare",
+        save: "Salvează",
+        discard: "Anulează",
+        back: "Înapoi",
+        no_results: "Niciun rezultat",
+        advanced_filter: "Filtru Avansat",
+        products: "Produse"
+      },
+      nav: {
+        dashboard: "Panou Control",
+        products: "Inventar",
+        identity: "Identitate",
+        preference: "Preferințe",
+        membership: "Membru",
+        logout: "Deconectare",
+        language: "Limbă"
+      }
+    }
   }
 };
 
-if (!i18n.isInitialized) {
-  i18n
-    .use(initReactI18next)
-    .init({
-      resources,
-      lng: 'en',
-      fallbackLng: 'en',
-      interpolation: {
-        escapeValue: false,
-      },
-      react: {
-        useSuspense: false
-      }
-    });
-}
+i18n
+  .use(initReactI18next)
+  .init({
+    resources,
+    lng: 'en',
+    fallbackLng: 'en',
+    interpolation: {
+      escapeValue: false,
+    },
+    react: {
+      useSuspense: false
+    }
+  });
 
 export default i18n;

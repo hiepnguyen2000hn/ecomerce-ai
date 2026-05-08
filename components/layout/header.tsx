@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { 
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Search, 
   Bell, 
   Sun, 
@@ -14,20 +16,25 @@ import {
   Package,
   ShoppingCart,
   Box,
-  LayoutDashboard
+  LayoutDashboard,
+  Globe
 } from 'lucide-react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/lib/context/theme-context';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { showToast } from '@/lib/toast';
+import { useTranslation } from 'react-i18next';
 
 interface HeaderProps {
   title: string;
   breadcrumbs?: string[];
+  onLogout?: () => void;
 }
 
-export function Header({ title, breadcrumbs }: HeaderProps) {
+export function Header({ title, breadcrumbs, onLogout }: HeaderProps) {
+  const { t, i18n } = useTranslation();
+  const safeT = (key: string, options?: any) => String(typeof t === 'function' ? t(key, options) : key);
   const { theme, toggleTheme } = useTheme();
   const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -147,7 +154,7 @@ export function Header({ title, breadcrumbs }: HeaderProps) {
             )} />
           </button>
 
-          <ProfileMenu isOpen={showProfile} onClose={() => setShowProfile(false)} />
+          <ProfileMenu isOpen={showProfile} onClose={() => setShowProfile(false)} onLogout={onLogout} />
         </div>
       </div>
     </header>
@@ -260,13 +267,13 @@ function NotificationPanel({ isOpen, onClose }: { isOpen: boolean, onClose: () =
     <AnimatePresence>
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-40" onClick={onClose} />
+          <div className="fixed inset-0 z-40 bg-black/0 cursor-default pointer-events-auto" onClick={onClose} />
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95, filter: 'blur(10px)' }}
             animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
             exit={{ opacity: 0, y: 20, scale: 0.95, filter: 'blur(10px)' }}
             transition={{ type: "spring", damping: 25, stiffness: 350 }}
-            className="absolute top-full mt-4 right-0 w-80 bg-white/90 dark:bg-[#0c0c0c]/90 backdrop-blur-2xl border border-gray-200/50 dark:border-white/10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] z-50 overflow-hidden"
+            className="absolute top-full mt-4 right-0 w-80 bg-white/90 dark:bg-[#0c0c0c]/90 backdrop-blur-2xl border border-gray-200/50 dark:border-white/10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] z-50 overflow-hidden pointer-events-auto"
           >
             <div className="p-6 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Activity Center</span>
@@ -307,25 +314,42 @@ function NotificationPanel({ isOpen, onClose }: { isOpen: boolean, onClose: () =
   );
 }
 
-function ProfileMenu({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+function ProfileMenu({ isOpen, onClose, onLogout }: { isOpen: boolean, onClose: () => void, onLogout?: () => void }) {
+  const { t, i18n } = useTranslation();
+  const safeT = (key: string, options?: any) => String(typeof t === 'function' ? t(key, options) : key);
+  const [showLanguage, setShowLanguage] = useState(false);
+
   const menuItems = [
-    { icon: User, label: 'Identity', sub: 'Profile & Bio' },
-    { icon: Settings, label: 'Preference', sub: 'Tools & Security' },
-    { icon: Sparkles, label: 'Membership', sub: 'Executive Tier' },
-    { icon: LogOut, label: 'Disconnect', sub: 'Secure Logout', danger: true },
+    { id: 'identity', icon: User, label: safeT('nav.identity'), sub: 'Profile & Bio' },
+    { id: 'preference', icon: Settings, label: safeT('nav.preference'), sub: 'Tools & Security' },
+    { id: 'language', icon: Globe, label: safeT('nav.language'), sub: (i18n.language || 'en').toUpperCase(), toggle: true },
+    { id: 'membership', icon: Sparkles, label: safeT('nav.membership'), sub: 'Executive Tier' },
+    { id: 'logout', icon: LogOut, label: safeT('nav.logout'), sub: 'Secure Logout', danger: true },
   ];
+
+  const languages = [
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
+    { code: 'ro', name: 'Romania', flag: '🇷🇴' }
+  ];
+
+  const handleLanguageChange = (code: string) => {
+    i18n.changeLanguage(code);
+    setShowLanguage(false);
+    showToast.success(`Language changed to ${code.toUpperCase()}`);
+  };
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-40" onClick={onClose} />
+          <div className="fixed inset-0 z-40 bg-black/0 cursor-default pointer-events-auto" onClick={onClose} />
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95, filter: 'blur(10px)' }}
             animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
             exit={{ opacity: 0, y: 20, scale: 0.95, filter: 'blur(10px)' }}
             transition={{ type: "spring", damping: 25, stiffness: 350 }}
-            className="absolute top-full mt-4 right-0 w-72 bg-white/95 dark:bg-[#0c0c0c]/95 backdrop-blur-2xl border border-gray-200/50 dark:border-white/10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-50 overflow-hidden"
+            className="absolute top-full mt-4 right-0 w-80 bg-white/95 dark:bg-[#0c0c0c]/95 backdrop-blur-2xl border border-gray-200/50 dark:border-white/10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-50 overflow-hidden pointer-events-auto"
           >
             <div className="relative p-8 border-b border-gray-100 dark:border-white/5 overflow-hidden group">
               <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/20 transition-all duration-700" />
@@ -338,30 +362,86 @@ function ProfileMenu({ isOpen, onClose }: { isOpen: boolean, onClose: () => void
                 </div>
               </div>
             </div>
-            <div className="p-3 space-y-1">
-              {menuItems.map((item, i) => (
-                <motion.button 
-                  key={item.label}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className={cn(
-                    "w-full p-4 hover:bg-gray-50 dark:hover:bg-white/5 text-left transition-all flex items-center gap-4 group rounded-[1.5rem]",
-                    item.danger && "hover:bg-red-50 dark:hover:bg-red-500/10"
-                  )}
-                >
-                  <div className={cn(
-                    "w-10 h-10 rounded-2xl bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-400 group-hover:bg-black dark:group-hover:bg-white group-hover:text-white dark:group-hover:text-black transition-all duration-500 shadow-sm group-hover:shadow-xl",
-                    item.danger && "group-hover:bg-red-500 group-hover:text-white"
-                  )}>
-                    <item.icon size={18} strokeWidth={1.5} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={cn("text-sm font-bold leading-none tracking-tight transition-colors", item.danger && "text-red-500 group-hover:text-red-600")}>{item.label}</p>
-                    <p className="text-[9px] text-gray-400 dark:text-white/20 mt-1.5 uppercase font-black tracking-[0.2em]">{item.sub}</p>
-                  </div>
-                </motion.button>
-              ))}
+            
+            <div className="relative">
+              <motion.div 
+                animate={{ x: showLanguage ? -320 : 0 }}
+                transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                className="p-3 space-y-1"
+              >
+                {menuItems.map((item, i) => (
+                  <motion.button 
+                    key={item.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    onClick={() => {
+                      if (item.id === 'language') {
+                        setShowLanguage(true);
+                      } else if (item.id === 'logout' && onLogout) {
+                        onLogout();
+                        onClose();
+                      }
+                    }}
+                    className={cn(
+                      "w-full p-4 hover:bg-gray-50 dark:hover:bg-white/5 text-left transition-all flex items-center gap-4 group rounded-[1.5rem]",
+                      item.danger && "hover:bg-red-50 dark:hover:bg-red-500/10"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-10 h-10 rounded-2xl bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-400 group-hover:bg-black dark:group-hover:bg-white group-hover:text-white dark:group-hover:text-black transition-all duration-500 shadow-sm group-hover:shadow-xl",
+                      item.danger && "group-hover:bg-red-500 group-hover:text-white"
+                    )}>
+                      <item.icon size={18} strokeWidth={1.5} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className={cn("text-sm font-bold leading-none tracking-tight transition-colors", item.danger && "text-red-500 group-hover:text-red-600")}>{item.label}</p>
+                        {item.toggle && <ChevronRight size={14} className="text-gray-300 group-hover:text-black dark:group-hover:text-white transition-all group-hover:translate-x-1" />}
+                      </div>
+                      <p className="text-[9px] text-gray-400 dark:text-white/20 mt-1.5 uppercase font-black tracking-[0.2em]">{item.sub}</p>
+                    </div>
+                  </motion.button>
+                ))}
+              </motion.div>
+
+              <motion.div
+                initial={{ x: 320 }}
+                animate={{ x: showLanguage ? 0 : 320 }}
+                transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                className="absolute inset-0 bg-white dark:bg-[#0c0c0c] z-20 p-3 flex flex-col"
+              >
+                <div className="px-4 py-4 border-b border-gray-100 dark:border-white/5 flex items-center gap-4 mb-2">
+                  <button 
+                    onClick={() => setShowLanguage(false)}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-xl text-gray-400 hover:text-black dark:hover:text-white transition-all"
+                  >
+                    <ChevronLeft size={18} className="rotate-0" />
+                  </button>
+                  <span className="text-xs font-black uppercase tracking-widest text-black dark:text-white">Select Language</span>
+                </div>
+                
+                <div className="space-y-1 overflow-y-auto no-scrollbar">
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => handleLanguageChange(lang.code)}
+                      className={cn(
+                        "w-full p-4 rounded-[1.5rem] flex items-center gap-4 transition-all",
+                        i18n.language === lang.code 
+                          ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" 
+                          : "hover:bg-gray-50 dark:hover:bg-white/5 text-gray-500 dark:text-white/40"
+                      )}
+                    >
+                      <span className="text-xl">{lang.flag}</span>
+                      <span className="text-sm font-bold tracking-tight">{lang.name}</span>
+                      {i18n.language === lang.code && (
+                        <motion.div layoutId="active-check-profile" className="ml-auto w-2 h-2 rounded-full bg-white" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
             </div>
           </motion.div>
         </>

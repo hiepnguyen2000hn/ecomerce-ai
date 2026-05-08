@@ -35,6 +35,8 @@ export function ProductList({ onEditProduct }: ProductListProps) {
 
   const STATUS_FILTERS = ['All', 'Draft', 'Testing', 'Scaling', 'Mature', 'Stopped'];
 
+  const [showFilters, setShowFilters] = useState(false);
+
   const filteredProducts = products.filter(p => {
     const statusMatch = activeStatus === 'All' || p.status === activeStatus;
     return statusMatch;
@@ -103,10 +105,43 @@ export function ProductList({ onEditProduct }: ProductListProps) {
             className="w-full bg-white dark:bg-[#121212] border border-gray-100 dark:border-white/5 py-4 pl-16 pr-6 rounded-2xl focus:ring-1 focus:ring-black/10 dark:focus:ring-white/20 transition-all text-xs font-bold uppercase tracking-widest placeholder:text-gray-400 dark:placeholder:text-gray-600 text-black dark:text-white"
           />
         </div>
-        <button className="flex items-center gap-2 px-6 py-4 bg-white dark:bg-[#121212] border border-gray-100 dark:border-white/5 rounded-2xl text-xs font-black uppercase tracking-widest text-gray-400 hover:text-black dark:hover:text-white hover:border-black/10 dark:hover:border-white/20 transition-all group">
-          <Filter size={18} className="text-gray-400 group-hover:text-blue-500 transition-colors" />
-          <span>{t('common.advanced_filter')}</span>
-        </button>
+        <div className="relative">
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className={cn(
+              "flex items-center gap-2 px-6 py-4 bg-white dark:bg-[#121212] border rounded-2xl text-xs font-black uppercase tracking-widest transition-all group",
+              showFilters ? "border-black dark:border-white text-black dark:text-white" : "border-gray-100 dark:border-white/5 text-gray-400 hover:text-black dark:hover:text-white"
+            )}
+          >
+            <Filter size={18} className={cn("transition-colors", showFilters ? "text-blue-500" : "text-gray-400 group-hover:text-blue-500")} />
+            <span>{t('common.advanced_filter')}</span>
+          </button>
+
+          <AnimatePresence>
+            {showFilters && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40 bg-black/0 cursor-default pointer-events-auto" 
+                  onClick={() => setShowFilters(false)} 
+                />
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute right-0 mt-3 w-72 bg-white dark:bg-[#0c0c0c] border border-gray-100 dark:border-white/5 rounded-[32px] p-6 shadow-2xl z-50 pointer-events-auto"
+                >
+                  <div className="space-y-6">
+                    <div className="pt-4">
+                      <button className="w-full py-4 bg-gray-50 dark:bg-white/5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black dark:hover:text-white transition-all">
+                        Reset Filters
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
         <div className="flex p-1.5 bg-white dark:bg-[#121212] border border-gray-100 dark:border-white/5 rounded-2xl">
           <button 
             onClick={() => setViewLayout('grid')}

@@ -14,6 +14,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { useUpdateProduct } from '@/lib/hooks/use-products';
+import { showToast } from '@/lib/toast';
 
 interface ProductDetailProps {
   product: Product;
@@ -38,7 +39,11 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
       updates: { name: product.name } 
     }, {
       onSuccess: () => {
+        showToast.success(t('common.save'), `${product.name} updated successfully.`);
         onBack();
+      },
+      onError: (err) => {
+        showToast.error(t('common.error'), err.message);
       }
     });
   };

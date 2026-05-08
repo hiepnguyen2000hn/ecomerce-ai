@@ -8,23 +8,31 @@ import { ProductList } from '@/components/views/product-list';
 import { ProductDetail } from '@/components/views/product-detail';
 import { DashboardView } from '@/components/views/dashboard';
 import { LandingPagesView } from '@/components/views/landing-pages';
+import { LoginView } from '@/components/views/login-view';
 import { Product } from '@/lib/mock-data';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAtom } from 'jotai';
 import { activeTabAtom, selectedProductAtom } from '@/lib/store';
 import { useTranslation } from 'react-i18next';
+import { showToast } from '@/lib/toast';
 
 export default function Home() {
   const { t } = useTranslation();
+  const safeT = (key: string, options?: any) => typeof t === 'function' ? t(key, options) : key;
   const [activeTab, setActiveTab] = useAtom(activeTabAtom);
   const [selectedProduct, setSelectedProduct] = useAtom(selectedProductAtom);
   const [isDetailView, setIsDetailView] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   // Navigation handlers
   const handleNavigate = (tab: NavItem) => {
     setActiveTab(tab);
     setIsDetailView(false);
     setSelectedProduct(null);
+  };
+
+  const handleLogin = (userData: any) => {
+    setUser(userData);
   };
 
   const handleSelectProduct = (product: Product) => {
@@ -40,6 +48,11 @@ export default function Home() {
   const handleBackToList = () => {
     setIsDetailView(false);
     setSelectedProduct(null);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    showToast.success('Logged out', 'Secure connection terminated.');
   };
 
   // Content rendering based on state
@@ -81,46 +94,73 @@ export default function Home() {
     }
   };
 
-  const getHeaderTitle = () => {
+  const getHeaderTitle = (): string => {
     if (isDetailView && selectedProduct) return selectedProduct.name;
     switch (activeTab) {
-      case 'landing-pages': return t('landing_pages.portfolio');
-      case 'products': return t('products.management');
-      case 'dashboard': return t('nav.dashboard');
-      default: return activeTab.charAt(0).toUpperCase() + activeTab.slice(1).replace('-', ' ');
+      case 'landing-pages': return String(safeT('landing_pages.portfolio'));
+      case 'products': return String(safeT('products.management'));
+      case 'dashboard': return String(safeT('nav.dashboard'));
+      default: return String(activeTab).charAt(0).toUpperCase() + String(activeTab).slice(1).replace('-', ' ');
     }
   };
 
   const getBreadcrumbs = () => {
-    if (isDetailView && selectedProduct) return [t('products.management'), selectedProduct.name];
+    if (isDetailView && selectedProduct) return [String(safeT('products.management')), selectedProduct.name];
     return [];
   };
 
   return (
-    <div className="flex h-screen bg-white dark:bg-[#080808] text-black dark:text-white transition-colors duration-500">
-      <Sidebar activeItem={activeTab as NavItem} onNavigate={handleNavigate} />
-      
-      <main className="flex-1 flex flex-col overflow-hidden relative">
-        <Header 
-          title={getHeaderTitle()} 
-          breadcrumbs={getBreadcrumbs()} 
-        />
-        
-        <div className="flex-1 overflow-y-auto no-scrollbar relative">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={isDetailView ? `detail-${selectedProduct?.id}` : activeTab}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="h-full"
-            >
-              {renderContent()}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </main>
-    </div>
+    <>
+      <AnimatePresence mode="wait">
+        {!user ? (
+          <motion.div
+            key="login"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 1.1, filter: 'blur(20px)' }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <LoginView onLogin={handleLogin} />
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="main-app"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="flex h-screen bg-white dark:bg-[#080808] text-black dark:text-white transition-colors duration-500 overflow-hidden"
+          >
+            <Sidebar 
+              activeItem={activeTab as NavItem} 
+              onNavigate={handleNavigate} 
+              onLogout={handleLogout}
+            />
+            
+            <main className="flex-1 flex flex-col overflow-hidden relative">
+              <Header 
+                title={getHeaderTitle()} 
+                breadcrumbs={getBreadcrumbs()} 
+                onLogout={handleLogout}
+              />
+              
+              <div className="flex-1 overflow-y-auto no-scrollbar relative">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={isDetailView ? `detail-${selectedProduct?.id}` : activeTab}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    className="h-full"
+                  >
+                    {renderContent()}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </main>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

@@ -7,7 +7,9 @@ import {
   Package, 
   MousePointer2, 
   Terminal, 
-  ShoppingCart
+  ShoppingCart,
+  Zap,
+  LogOut
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
@@ -17,9 +19,10 @@ export type NavItem = 'dashboard' | 'products' | 'landing-pages' | 'ads-command'
 interface SidebarProps {
   activeItem: NavItem;
   onNavigate: (item: NavItem) => void;
+  onLogout?: () => void;
 }
 
-export function Sidebar({ activeItem, onNavigate }: SidebarProps) {
+export function Sidebar({ activeItem, onNavigate, onLogout }: SidebarProps) {
   const { t } = useTranslation();
 
   const items = [
@@ -32,13 +35,15 @@ export function Sidebar({ activeItem, onNavigate }: SidebarProps) {
 
   return (
     <div className="w-64 h-full bg-white dark:bg-[#080808] border-r border-gray-100 dark:border-white/5 flex flex-col py-8 shrink-0 transition-colors duration-300">
-      <div className="px-8 mb-12 flex items-center gap-3">
-        <div className="w-10 h-10 bg-black dark:bg-white rounded-none flex items-center justify-center text-white dark:text-black font-display font-black text-xl tracking-tighter shadow-xl">
-          L
-        </div>
-        <div>
-          <h1 className="font-display font-black text-black dark:text-white leading-none tracking-tighter uppercase text-lg">LEVELUP</h1>
-          <p className="text-[9px] text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] font-bold mt-1">Ecommerce OS</p>
+      <div className="px-8 mb-12">
+        <div className="flex items-center gap-4 group cursor-pointer" onClick={() => onNavigate('dashboard')}>
+          <div className="w-12 h-12 bg-black dark:bg-white rounded-2xl flex items-center justify-center text-white dark:text-black shadow-[0_10px_25px_-10px_rgba(0,0,0,0.3)] dark:shadow-[0_10px_25px_-10px_rgba(255,255,255,0.1)] group-hover:scale-105 transition-transform duration-500">
+            <Zap size={22} fill="currentColor" />
+          </div>
+          <div className="space-y-0.5">
+            <h1 className="font-display font-black text-black dark:text-white leading-none tracking-tighter uppercase text-xl italic italic">LEVEL-UP</h1>
+            <p className="text-[8px] text-gray-400 dark:text-gray-500 uppercase tracking-[0.4em] font-black">Ecommerce OS</p>
+          </div>
         </div>
       </div>
 
@@ -72,7 +77,7 @@ export function Sidebar({ activeItem, onNavigate }: SidebarProps) {
         })}
       </nav>
 
-      <div className="px-8 mt-auto py-8">
+      <div className="px-4 mt-auto space-y-4">
         <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/5">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('nav.storage')}</p>
           <div className="h-1.5 w-full bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden mb-2">
