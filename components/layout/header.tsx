@@ -6,7 +6,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Search, 
-  Bell, 
   Sun, 
   Moon, 
   Settings, 
@@ -19,6 +18,11 @@ import {
   LayoutDashboard,
   Globe
 } from 'lucide-react';
+import { BellIcon } from '@/components/animate-ui/icons/bell';
+import { UserIcon } from '@/components/animate-ui/icons/user';
+import { SettingsIcon } from '@/components/animate-ui/icons/settings';
+import { LogOutIcon } from '@/components/animate-ui/icons/log-out';
+import { SearchIcon } from '@/components/animate-ui/icons/search';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/lib/context/theme-context';
@@ -73,7 +77,7 @@ export function Header({ title, breadcrumbs, onLogout }: HeaderProps) {
           onClick={() => setShowSearch(true)}
           className="hidden lg:flex items-center gap-3 px-4 py-2 bg-gray-50 dark:bg-white/5 rounded-2xl border border-transparent hover:border-black/5 dark:hover:border-white/10 transition-all group w-64 text-left"
         >
-          <Search size={16} className="text-gray-400 group-hover:text-black dark:group-hover:text-white transition-colors" />
+          <SearchIcon size={16} className="text-gray-400 group-hover:text-black dark:group-hover:text-white transition-colors" />
           <span className="text-xs font-medium text-gray-400 flex-1">Search everything...</span>
           <span className="text-[10px] font-mono opacity-30 select-none">⌘K</span>
         </button>
@@ -114,7 +118,7 @@ export function Header({ title, breadcrumbs, onLogout }: HeaderProps) {
                 showNotifications ? "bg-gray-50 dark:bg-white/5 text-black dark:text-white" : "text-gray-500 hover:text-black dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"
               )}
             >
-              <Bell size={20} strokeWidth={1.5} />
+              <BellIcon size={20} />
               <span className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#080808]" />
             </button>
             <NotificationPanel isOpen={showNotifications} onClose={() => setShowNotifications(false)} />
@@ -192,7 +196,7 @@ function SearchPalette({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
               className="w-full max-w-2xl bg-white dark:bg-[#0c0c0c] border border-gray-200 dark:border-white/10 rounded-[2rem] shadow-[0_30px_60px_rgba(0,0,0,0.4)] overflow-hidden pointer-events-auto"
             >
               <div className="p-6 border-b border-gray-100 dark:border-white/5 flex items-center gap-4">
-                <Search size={22} className="text-gray-400" />
+                <SearchIcon size={22} className="text-gray-400" />
                 <input 
                   autoFocus
                   placeholder="What are you looking for?"
@@ -320,11 +324,11 @@ function ProfileMenu({ isOpen, onClose, onLogout }: { isOpen: boolean, onClose: 
   const [showLanguage, setShowLanguage] = useState(false);
 
   const menuItems = [
-    { id: 'identity', icon: User, label: safeT('nav.identity'), sub: 'Profile & Bio' },
-    { id: 'preference', icon: Settings, label: safeT('nav.preference'), sub: 'Tools & Security' },
+    { id: 'identity', icon: UserIcon, label: safeT('nav.identity'), sub: 'Profile & Bio' },
+    { id: 'preference', icon: SettingsIcon, label: safeT('nav.preference'), sub: 'Tools & Security' },
     { id: 'language', icon: Globe, label: safeT('nav.language'), sub: (i18n.language || 'en').toUpperCase(), toggle: true },
     { id: 'membership', icon: Sparkles, label: safeT('nav.membership'), sub: 'Executive Tier' },
-    { id: 'logout', icon: LogOut, label: safeT('nav.logout'), sub: 'Secure Logout', danger: true },
+    { id: 'logout', icon: LogOutIcon, label: safeT('nav.logout'), sub: 'Secure Logout', danger: true },
   ];
 
   const languages = [
