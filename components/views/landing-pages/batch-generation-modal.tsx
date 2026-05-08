@@ -201,17 +201,24 @@ export function BatchGenerationModal({ product, isOpen, onClose, onConfirm }: Ba
         </div>
 
         {/* Action Button */}
-        <div className="px-10 pb-10">
+        <div className="px-10 pb-12 pt-4">
           <button 
             onClick={onConfirm}
-            className="w-full h-20 bg-indigo-600 hover:bg-indigo-700 text-white rounded-3xl font-black uppercase tracking-[0.2em] text-sm overflow-hidden relative group transition-all"
+            className="w-full h-16 bg-indigo-600 text-white rounded-[28px] font-black uppercase tracking-[0.2em] text-xs relative group overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] shadow-2xl shadow-indigo-600/40"
           >
-            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+            {/* Shine sweep effect */}
+            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+            
             <div className="relative flex items-center justify-center gap-4">
-              {t('landing_pages.batch.create_button')}
-              <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
+              <span className="group-hover:tracking-[0.3em] transition-all duration-500">{t('landing_pages.batch.create_button')}</span>
+              <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-indigo-600 transition-all duration-500">
+                <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
+              </div>
             </div>
           </button>
+          <p className="text-center mt-6 text-[9px] font-bold text-gray-400 dark:text-white/20 uppercase tracking-[0.4em]">
+            AI will generate assets based on your product SKU & status
+          </p>
         </div>
       </motion.div>
     </div>

@@ -54,8 +54,12 @@ const resources = {
         product_name: "Product Name",
         description: "Description",
         ai_polish: "AI Polish",
+        ai_rewrite: "AI Rewrite",
         variants: "Variants",
-        stock: "Stock"
+        stock: "Stock",
+        available_units: "Available: {{qty}} units",
+        add_variant_group: "Add variant group",
+        sku_reference: "SKU Reference"
       },
       landing_pages: {
         portfolio: "Landing Page Portfolio",
