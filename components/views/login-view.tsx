@@ -193,7 +193,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="admin@hiepnguyen.io"
+                      placeholder="you@company.com"
                       className="w-full h-16 bg-white/[0.03] border border-white/5 rounded-2xl pl-16 pr-6 text-sm font-bold text-white outline-none focus:bg-white/[0.06] focus:border-white/20 transition-all placeholder:text-white/5 tracking-tight"
                     />
                   </div>
