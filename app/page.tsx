@@ -9,12 +9,11 @@ import { ProductDetail } from '@/components/views/product-detail';
 import { DashboardView } from '@/components/views/dashboard';
 import { LandingPagesView } from '@/components/views/landing-pages';
 import { LoginView } from '@/components/views/login-view';
-import { Product } from '@/lib/mock-data';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAtom } from 'jotai';
-import { activeTabAtom, selectedProductAtom } from '@/lib/store';
+import { useAtom, useAtomValue } from 'jotai';
+import { activeTabAtom, selectedProductAtom, currentUserAtom } from '@/lib/store';
+import { useInitAuth, useLogout } from '@/lib/hooks/use-auth';
 import { useTranslation } from 'react-i18next';
-import { showToast } from '@/lib/toast';
 
 export default function Home() {
   const { t } = useTranslation();
@@ -22,7 +21,9 @@ export default function Home() {
   const [activeTab, setActiveTab] = useAtom(activeTabAtom);
   const [selectedProduct, setSelectedProduct] = useAtom(selectedProductAtom);
   const [isDetailView, setIsDetailView] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const currentUser  = useAtomValue(currentUserAtom);
+  const handleLogout = useLogout();
+  useInitAuth();
 
   // Navigation handlers
   const handleNavigate = (tab: NavItem) => {
@@ -31,16 +32,12 @@ export default function Home() {
     setSelectedProduct(null);
   };
 
-  const handleLogin = (userData: any) => {
-    setUser(userData);
-  };
-
-  const handleSelectProduct = (product: Product) => {
+  const handleSelectProduct = (product: any) => {
     setSelectedProduct(product);
     setIsDetailView(true);
   };
 
-  const handleEditProduct = (product: Product) => {
+  const handleEditProduct = (product: any) => {
     setSelectedProduct(product);
     setIsDetailView(true);
   };
@@ -48,11 +45,6 @@ export default function Home() {
   const handleBackToList = () => {
     setIsDetailView(false);
     setSelectedProduct(null);
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-    showToast.success('Logged out', 'Secure connection terminated.');
   };
 
   // Content rendering based on state
@@ -112,7 +104,7 @@ export default function Home() {
   return (
     <>
       <AnimatePresence mode="wait">
-        {!user ? (
+        {!currentUser ? (
           <motion.div
             key="login"
             initial={{ opacity: 0 }}
@@ -120,7 +112,7 @@ export default function Home() {
             exit={{ opacity: 0, scale: 1.1, filter: 'blur(20px)' }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
-            <LoginView onLogin={handleLogin} />
+            <LoginView onLogin={() => {}} />
           </motion.div>
         ) : (
           <motion.div 
