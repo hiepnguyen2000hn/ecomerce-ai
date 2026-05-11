@@ -1,9 +1,11 @@
 import { atom } from 'jotai';
-import { Product } from '@/lib/mock-data';
+import type { UserMe } from './api/types';
 
-// App state atoms
-export const activeTabAtom = atom<string>('products');
-export const selectedProductAtom = atom<Product | null>(null);
+// Navigation
+export const activeTabAtom       = atom<string>('products');
+export const selectedProductAtom = atom<any>(null);
+export const languageAtom        = atom<string>('en');
 
-// User preferences
-export const languageAtom = atom<string>('en');
+// Auth (tokens persisted by lib/api/client.ts; user in-memory only)
+export const currentUserAtom     = atom<UserMe | null>(null);
+export const isAuthenticatedAtom = atom((get) => get(currentUserAtom) !== null);
