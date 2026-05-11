@@ -12,13 +12,13 @@ import {
   ChevronRight,
   AlertCircle
 } from 'lucide-react';
-import { Product } from '@/lib/mock-data';
+import type { ApiProduct } from '@/lib/api/types';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 
 interface ProductListProps {
-  onEditProduct: (product: Product) => void;
+  onEditProduct: (product: ApiProduct) => void;
 }
 
 import { SlidingNumber } from '@/components/animate-ui/sliding-number';
@@ -31,12 +31,12 @@ export function ProductList({ onEditProduct }: ProductListProps) {
   const [viewLayout, setViewLayout] = useState<'grid' | 'list'>('grid');
   const { data: products = [], isLoading, error } = useProducts();
 
-  const STATUS_FILTERS = ['All', 'Draft', 'Testing', 'Scaling', 'Mature', 'Stopped'];
+  const STATUS_FILTERS = ['All', 'DRAFT', 'TESTING', 'SCALING', 'MATURE', 'STOPPED'];
 
   const [showFilters, setShowFilters] = useState(false);
 
   const filteredProducts = products.filter(p => {
-    const statusMatch = activeStatus === 'All' || p.status === activeStatus;
+    const statusMatch = activeStatus === 'All' || p.lifecycleStage === activeStatus;
     return statusMatch;
   });
 
@@ -182,11 +182,11 @@ export function ProductList({ onEditProduct }: ProductListProps) {
                   <div className="flex gap-2">
                     <span className={cn(
                       "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm",
-                      p.status === 'Scaling' ? "bg-blue-600 text-white" :
-                      p.status === 'Testing' ? "bg-black dark:bg-white text-white dark:text-black" :
+                      p.lifecycleStage === 'SCALING' ? "bg-blue-600 text-white" :
+                      p.lifecycleStage === 'TESTING' ? "bg-black dark:bg-white text-white dark:text-black" :
                       "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
                     )}>
-                      {p.status}
+                      {p.lifecycleStage}
                     </span>
                   </div>
                 </div>
@@ -201,7 +201,7 @@ export function ProductList({ onEditProduct }: ProductListProps) {
                   viewLayout === 'grid' ? "w-full aspect-[16/10] mb-10" : "w-32 h-32 md:w-40 md:h-40"
                 )}>
                   <Image 
-                    src={p.image} 
+                    src={`https://picsum.photos/seed/${p.sku}/800/800`}
                     alt={p.name} 
                     fill 
                     className="object-cover group-hover:scale-110 transition-transform duration-1000 ease-out grayscale group-hover:grayscale-0" 
@@ -229,11 +229,11 @@ export function ProductList({ onEditProduct }: ProductListProps) {
                         <div className="mt-auto flex items-center gap-4">
                            <span className={cn(
                             "px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-sm",
-                            p.status === 'Scaling' ? "bg-blue-600 text-white" :
-                            p.status === 'Testing' ? "bg-black dark:bg-white text-white dark:text-black" :
+                            p.lifecycleStage === 'SCALING' ? "bg-blue-600 text-white" :
+                            p.lifecycleStage === 'TESTING' ? "bg-black dark:bg-white text-white dark:text-black" :
                             "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
                           )}>
-                            {p.status}
+                            {p.lifecycleStage}
                           </span>
                           <div className="h-4 w-px bg-gray-100 dark:bg-white/5" />
                           <div className="flex flex-col">

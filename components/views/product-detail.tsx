@@ -9,7 +9,7 @@ import {
   ChevronRight,
   ExternalLink
 } from 'lucide-react';
-import { Product } from '@/lib/mock-data';
+import type { ApiProduct } from '@/lib/api/types';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
@@ -17,7 +17,7 @@ import { useUpdateProduct } from '@/lib/hooks/use-products';
 import { showToast } from '@/lib/toast';
 
 interface ProductDetailProps {
-  product: Product;
+  product: ApiProduct;
   onBack: () => void;
 }
 
@@ -28,9 +28,9 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
   
   // Simulation of more images
   const images = [
-    product.image, 
-    'https://picsum.photos/seed/pdet1/800/800', 
-    'https://picsum.photos/seed/pdet2/800/800'
+    `https://picsum.photos/seed/${product.sku}/800/800`,
+    'https://picsum.photos/seed/pdet1/800/800',
+    'https://picsum.photos/seed/pdet2/800/800',
   ];
 
   const handleSave = () => {
