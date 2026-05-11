@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
-  Plus, 
   Filter, 
   Grid2X2, 
   List, 
@@ -22,7 +21,6 @@ interface ProductListProps {
   onEditProduct: (product: Product) => void;
 }
 
-import { TextAnimate } from '@/components/animate-ui/text-animate';
 import { SlidingNumber } from '@/components/animate-ui/sliding-number';
 
 import { useProducts } from '@/lib/hooks/use-products';
@@ -69,33 +67,6 @@ export function ProductList({ onEditProduct }: ProductListProps) {
 
   return (
     <div className="px-12 py-12 pb-32">
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
-        <div className="flex flex-col">
-          <TextAnimate 
-            text={t('products.inventory')}
-            type="word"
-            animation="slide-up"
-            className="text-[80px] lg:text-[120px] leading-[0.85] font-display font-black tracking-tighter uppercase text-left p-0 text-black dark:text-white"
-          />
-          <TextAnimate 
-            text={t('products.management')}
-            type="word"
-            animation="blur-in"
-            delay={0.2}
-            className="text-[80px] lg:text-[120px] leading-[0.85] font-display font-black tracking-tighter uppercase text-left p-0 stroke-text"
-          />
-        </div>
-        <div className="flex flex-col items-start md:items-end gap-6 max-w-sm">
-          <p className="text-gray-500 text-left md:text-right text-sm font-medium leading-relaxed">
-            Configure your global product catalog with advanced variant controls and real-time inventory tracking.
-          </p>
-          <button className="bg-black dark:bg-white text-white dark:text-black font-black uppercase tracking-widest py-3.5 px-8 rounded-full transition-all hover:opacity-80 shadow-xl shadow-black/5 dark:shadow-white/5 flex items-center gap-2 text-xs">
-            <Plus size={18} />
-            <span>{t('common.add_manual')}</span>
-          </button>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-6 mb-12">
         <div className="relative flex items-center group">
           <Search size={20} className="absolute left-6 text-gray-400 group-focus-within:text-black dark:group-focus-within:text-white transition-colors" />
