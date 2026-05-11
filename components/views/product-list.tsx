@@ -69,11 +69,11 @@ export function ProductList({ onEditProduct }: ProductListProps) {
     <div className="px-12 py-12 pb-32">
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-6 mb-12">
         <div className="relative flex items-center group">
-          <Search size={20} className="absolute left-6 text-gray-400 group-focus-within:text-black dark:group-focus-within:text-white transition-colors" />
+          <Search size={16} className="absolute left-5 text-gray-400 group-focus-within:text-black dark:group-focus-within:text-white transition-colors" />
           <input 
             type="text" 
             placeholder={t('products.search_catalog').toUpperCase()}
-            className="w-full bg-white dark:bg-[#121212] border border-gray-100 dark:border-white/5 py-4 pl-16 pr-6 rounded-2xl focus:ring-1 focus:ring-black/10 dark:focus:ring-white/20 transition-all text-xs font-bold uppercase tracking-widest placeholder:text-gray-400 dark:placeholder:text-gray-600 text-black dark:text-white"
+            className="w-full bg-white dark:bg-[#121212] border border-gray-100 dark:border-white/5 py-3 pl-14 pr-6 rounded-2xl focus:ring-1 focus:ring-black/10 dark:focus:ring-white/20 transition-all text-[10px] font-bold uppercase tracking-widest placeholder:text-gray-400 dark:placeholder:text-gray-600 text-black dark:text-white"
           />
         </div>
         <div className="relative">

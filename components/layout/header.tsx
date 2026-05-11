@@ -68,7 +68,7 @@ export function Header({ title, breadcrumbs, onLogout }: HeaderProps) {
             ))}
           </div>
         )}
-        <h2 className="text-2xl font-display font-black text-black dark:text-white uppercase tracking-tighter">{title}</h2>
+        <h2 className="text-lg md:text-xl font-display font-black text-black dark:text-white uppercase tracking-tighter">{title}</h2>
       </div>
 
       <div className="flex items-center gap-6">
