@@ -1,7 +1,13 @@
+// Generic envelope used by this API: { data: T }
+export interface ApiDataResponse<T> {
+  data: T;
+}
+
 // Auth
 export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
+  expiresIn: number;
 }
 
 export interface UserMe {
