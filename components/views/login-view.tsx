@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, Globe, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { showToast } from '@/lib/toast';
+import { useLogin } from '@/lib/hooks/use-auth';
 
 interface LoginViewProps {
   onLogin: (user: any) => void;
@@ -15,7 +16,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const login = useLogin();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,13 +24,9 @@ export function LoginView({ onLogin }: LoginViewProps) {
       showToast.error('Login Failed', 'Please provide valid credentials.');
       return;
     }
-
-    setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    showToast.success('Access Granted', 'Welcome to Level-Up Ecommerce OS');
-    onLogin({ name: 'Hiep Nguyen', email });
-    setIsSubmitting(false);
+    login.mutate({ email, password }, {
+      onSuccess: () => onLogin({}),
+    });
   };
 
   return (
@@ -233,12 +230,12 @@ export function LoginView({ onLogin }: LoginViewProps) {
               <div className="pt-2">
                 <button 
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={login.isPending}
                   className="w-full h-16 bg-white text-black text-[12px] font-black uppercase tracking-[0.4em] rounded-2xl shadow-2xl relative overflow-hidden group transition-all active:scale-[0.98]"
                 >
                   <div className="absolute inset-0 bg-blue-600 translate-y-[100%] group-hover:translate-y-[0%] transition-transform duration-500 rounded-none" />
                   <div className="relative flex items-center justify-center h-full group-hover:text-white transition-colors duration-500">
-                    {isSubmitting ? (
+                    {login.isPending ? (
                       <div className="flex gap-2">
                         {[0, 1, 2].map(i => (
                           <motion.div 
