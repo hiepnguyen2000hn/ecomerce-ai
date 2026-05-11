@@ -14,7 +14,8 @@ export interface UserMe {
   id: string;
   email: string;
   name?: string;
-  role: string;
+  role?: string;
+  roles?: string[];
 }
 
 // Products
@@ -168,4 +169,10 @@ export interface ApiUser {
   email: string;
   name?: string;
   role: string;
+}
+
+export function userDisplayRole(user: UserMe): string {
+  if (user.roles && user.roles.length > 0) return user.roles[0];
+  if (user.role) return user.role;
+  return 'User';
 }
