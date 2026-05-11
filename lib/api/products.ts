@@ -1,11 +1,11 @@
 import { apiClient } from './client';
 import type {
-  ApiProduct, CreateProductDto, ProductsListParams,
+  ApiProduct, CreateProductDto, ProductsListParams, ProductsListResponse,
   LifecycleTransitionDto, CreateVariantGroupDto, UpdateVariantGroupDto,
   CreateVariantDto, UpdateVariantDto,
 } from './types';
 
-export function listProducts(params: ProductsListParams = {}): Promise<ApiProduct[]> {
+export async function listProducts(params: ProductsListParams = {}): Promise<ApiProduct[]> {
   const qs = new URLSearchParams();
   if (params.page)      qs.set('page',     String(params.page));
   if (params.pageSize)  qs.set('pageSize', String(params.pageSize));
@@ -16,7 +16,8 @@ export function listProducts(params: ProductsListParams = {}): Promise<ApiProduc
   params.market?.forEach(m         => qs.append('market', m));
   if (params.includeDeleted)        qs.set('includeDeleted', 'true');
   const query = qs.toString() ? `?${qs}` : '';
-  return apiClient.get(`/api/v1/products${query}`);
+  const res = await apiClient.get<ProductsListResponse>(`/api/v1/products${query}`);
+  return res.data;
 }
 
 export const getProduct     = (id: string): Promise<ApiProduct> =>

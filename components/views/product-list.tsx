@@ -13,6 +13,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import type { ApiProduct } from '@/lib/api/types';
+import { staticUrl } from '@/lib/api/config';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
@@ -201,7 +202,7 @@ export function ProductList({ onEditProduct }: ProductListProps) {
                   viewLayout === 'grid' ? "w-full aspect-[16/10] mb-10" : "w-32 h-32 md:w-40 md:h-40"
                 )}>
                   <Image 
-                    src={`https://picsum.photos/seed/${p.sku}/800/800`}
+                    src={staticUrl(p.primaryImageUrl) || `https://picsum.photos/seed/${p.sku}/800/800`}
                     alt={p.name} 
                     fill 
                     className="object-cover group-hover:scale-110 transition-transform duration-1000 ease-out grayscale group-hover:grayscale-0" 

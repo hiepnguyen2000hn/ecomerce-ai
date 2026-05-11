@@ -21,6 +21,46 @@ export interface UserMe {
 export type LifecycleStage = 'DRAFT' | 'TESTING' | 'SCALING' | 'MATURE' | 'STOPPED';
 export type ProductStatus = 'ACTIVE' | 'LOW_STOCK' | 'OUT_OF_STOCK';
 
+export interface VariantOption {
+  id: string;
+  groupId: string;
+  name: string;
+  skuSuffix: string | null;
+  priceDelta: string;
+  imageUrl: string | null;
+  position: number;
+}
+
+export interface VariantGroup {
+  id: string;
+  productId: string;
+  name: string;
+  position: number;
+  options: VariantOption[];
+}
+
+export interface ProductVariant {
+  id: string;
+  productId: string;
+  sku: string;
+  optionCombinationJson: Record<string, string>;
+  priceAmount: string;
+  currency: string;
+  stockQty: number;
+  position: number;
+}
+
+export interface ProductImage {
+  id: string;
+  productId: string;
+  url: string;
+  alt: string;
+  position: number;
+  isPrimary: boolean;
+  source: string;
+  createdAt: string;
+}
+
 export interface ApiProduct {
   id: string;
   sku: string;
@@ -28,15 +68,33 @@ export interface ApiProduct {
   slug?: string;
   description?: string;
   weightGrams?: number;
-  cogsAmount?: number;
+  cogsAmount?: string;
   cogsCurrency?: string;
-  retailPriceAmount?: number;
+  retailPriceAmount?: string;
   retailPriceCurrency?: string;
   marketCodes?: string[];
   lifecycleStage: LifecycleStage;
   status: ProductStatus;
+  primaryImageUrl?: string;
+  createdById?: string;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null;
+  variantGroups?: VariantGroup[];
+  variants?: ProductVariant[];
+  images?: ProductImage[];
+}
+
+export interface ProductsListMeta {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface ProductsListResponse {
+  data: ApiProduct[];
+  meta: ProductsListMeta;
 }
 
 export interface CreateProductDto {

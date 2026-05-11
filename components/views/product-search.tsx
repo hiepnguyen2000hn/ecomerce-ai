@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ChevronRight } from 'lucide-react';
 import type { ApiProduct } from '@/lib/api/types';
+import { staticUrl } from '@/lib/api/config';
 import Image from 'next/image';
 import { useTranslation } from 'react-i18next';
 
@@ -106,7 +107,7 @@ export function ProductSearch({ onSelectProduct }: ProductSearchProps) {
                 >
                   <div className="relative w-16 h-16 rounded-[20px] overflow-hidden bg-gray-100 dark:bg-black/40 border border-gray-200 dark:border-white/10 flex-shrink-0">
                     <Image 
-                      src={`https://picsum.photos/seed/${product.sku}/800/800`}
+                      src={staticUrl(product.primaryImageUrl) || `https://picsum.photos/seed/${product.sku}/800/800`}
                       alt={product.name} 
                       fill 
                       className="object-cover group-hover:scale-110 transition-transform duration-700 grayscale group-hover:grayscale-0"
