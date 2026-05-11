@@ -29,6 +29,9 @@ import { useTheme } from '@/lib/context/theme-context';
 import { cn } from '@/lib/utils';
 import { showToast } from '@/lib/toast';
 import { useTranslation } from 'react-i18next';
+import { useAtomValue } from 'jotai';
+import { currentUserAtom } from '@/lib/store';
+import { userDisplayRole } from '@/lib/api/types';
 
 interface HeaderProps {
   title: string;
@@ -322,6 +325,7 @@ function ProfileMenu({ isOpen, onClose, onLogout }: { isOpen: boolean, onClose: 
   const { t, i18n } = useTranslation();
   const safeT = (key: string, options?: any) => String(typeof t === 'function' ? t(key, options) : key);
   const [showLanguage, setShowLanguage] = useState(false);
+  const currentUser = useAtomValue(currentUserAtom);
 
   const menuItems = [
     { id: 'identity', icon: UserIcon, label: safeT('nav.identity'), sub: 'Profile & Bio' },
@@ -358,11 +362,17 @@ function ProfileMenu({ isOpen, onClose, onLogout }: { isOpen: boolean, onClose: 
             <div className="relative p-8 border-b border-gray-100 dark:border-white/5 overflow-hidden group">
               <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/20 transition-all duration-700" />
               <div className="relative z-10">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Authorized User</p>
-                <p className="text-lg font-display font-black text-black dark:text-white mt-1 leading-tight tracking-tighter">HIEP NGUYEN</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">
+                  {currentUser ? userDisplayRole(currentUser) : 'User'}
+                </p>
+                <p className="text-lg font-display font-black text-black dark:text-white mt-1 leading-tight tracking-tighter">
+                  {currentUser ? (currentUser.name ?? currentUser.email).toUpperCase() : '—'}
+                </p>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                  <p className="text-[9px] font-mono text-gray-400 dark:text-white/30 uppercase font-bold tracking-widest truncate">hiepnguyendevft@gmail.com</p>
+                  <p className="text-[9px] font-mono text-gray-400 dark:text-white/30 uppercase font-bold tracking-widest truncate">
+                    {currentUser?.email ?? ''}
+                  </p>
                 </div>
               </div>
             </div>
