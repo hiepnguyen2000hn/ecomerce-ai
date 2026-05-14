@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, Globe, Sparkles } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Globe, Sparkles, Sun, Moon } from 'lucide-react';
+import { useTheme } from '@/lib/context/theme-context';
 import { cn } from '@/lib/utils';
 import { showToast } from '@/lib/toast';
 import { useLogin } from '@/lib/hooks/use-auth';
@@ -17,6 +18,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const login = useLogin();
+  const { theme, toggleTheme } = useTheme();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +33,33 @@ export function LoginView({ onLogin }: LoginViewProps) {
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#000] overflow-hidden font-sans selection:bg-blue-500/30">
-      
+
+      {/* Theme Toggle */}
+      <div className="absolute top-6 right-6 z-[110]">
+        <button
+          onClick={toggleTheme}
+          className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white transition-all hover:scale-105 active:scale-95"
+          aria-label="Toggle theme"
+        >
+          <div className="relative w-5 h-5">
+            <motion.div
+              animate={{ rotate: theme === 'dark' ? 0 : 180, scale: theme === 'dark' ? 1 : 0, opacity: theme === 'dark' ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0 flex items-center justify-center"
+            >
+              <Sun size={20} strokeWidth={1.5} />
+            </motion.div>
+            <motion.div
+              animate={{ rotate: theme === 'dark' ? -180 : 0, scale: theme === 'dark' ? 0 : 1, opacity: theme === 'dark' ? 0 : 1 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0 flex items-center justify-center"
+            >
+              <Moon size={20} strokeWidth={1.5} />
+            </motion.div>
+          </div>
+        </button>
+      </div>
+
       {/* Video Background Layer */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <video 
