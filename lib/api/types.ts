@@ -176,3 +176,72 @@ export function userDisplayRole(user: UserMe): string {
   if (user.role) return user.role;
   return 'User';
 }
+
+// Users (full view from backend)
+export interface ApiUserFull {
+  id: string;
+  email: string;
+  fullName: string;
+  status: string;
+  roles: string[];
+  createdAt: string;
+}
+
+// LP Templates
+export interface LpTemplate {
+  id: string;
+  code: string;
+  name: string;
+  masterHtmlPath: string;
+  screenshotUrl?: string;
+  lang: string;
+  marketCode: string;
+  active: boolean;
+  perfScore?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateLpTemplateDto {
+  code: string;
+  name: string;
+  masterHtmlPath: string;
+  screenshotUrl?: string;
+  lang: string;
+  marketCode: string;
+  active?: boolean;
+}
+
+export type UpdateLpTemplateDto = Partial<CreateLpTemplateDto>;
+
+// Landing Pages
+export type LandingPageStatus = 'DRAFT' | 'NEEDS_REVIEW' | 'PUBLISHED' | 'ARCHIVED';
+
+export interface ApiLandingPage {
+  id: string;
+  productId: string;
+  templateId?: string;
+  code: string;
+  marketCode: string;
+  lang: string;
+  slug: string;
+  status: LandingPageStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateLandingPageDto {
+  productId: string;
+  templateId?: string;
+  code: string;
+  marketCode: string;
+  lang: string;
+  slug: string;
+}
+
+export type UpdateLandingPageDto = Partial<CreateLandingPageDto>;
+
+export interface StatusTransitionDto {
+  toStatus: LandingPageStatus;
+  reason?: string;
+}
