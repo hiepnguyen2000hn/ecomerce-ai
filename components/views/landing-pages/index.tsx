@@ -7,17 +7,17 @@ import { LandingPageSelector } from './selector';
 import { LandingPageAnalytics } from './analytics';
 import { LandingPageEditor } from './editor';
 import { BatchGenerationModal } from './batch-generation-modal';
-import { LandingPage, Product } from '@/lib/mock-data';
+import type { ApiProduct, ApiLandingPage } from '@/lib/api/types';
 
 export type LandingPageViewType = 'list' | 'selector' | 'analytics' | 'editor';
 
 export function LandingPagesView() {
   const [view, setView] = useState<LandingPageViewType>('list');
-  const [selectedLP, setSelectedLP] = useState<LandingPage | null>(null);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedLP, setSelectedLP] = useState<ApiLandingPage | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<ApiProduct | null>(null);
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
 
-  const handleSelectPage = (lp: LandingPage) => {
+  const handleSelectPage = (lp: ApiLandingPage) => {
     setSelectedLP(lp);
     setView('analytics');
   };
@@ -26,7 +26,7 @@ export function LandingPagesView() {
     setView('selector');
   };
 
-  const handleProductSelect = (product: Product) => {
+  const handleProductSelect = (product: ApiProduct) => {
     setSelectedProduct(product);
     setIsBatchModalOpen(true);
   };

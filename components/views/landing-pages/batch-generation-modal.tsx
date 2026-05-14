@@ -12,12 +12,12 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Product } from '@/lib/mock-data';
+import type { ApiProduct } from '@/lib/api/types';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
 interface BatchGenerationModalProps {
-  product: Product;
+  product: ApiProduct;
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;

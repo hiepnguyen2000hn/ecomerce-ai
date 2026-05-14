@@ -17,8 +17,7 @@ import {
   Sparkles,
   ArrowRight
 } from 'lucide-react';
-import { LandingPage, MOCK_PRODUCTS } from '@/lib/mock-data';
-import Image from 'next/image';
+import type { ApiLandingPage } from '@/lib/api/types';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -35,7 +34,7 @@ import {
 } from 'recharts';
 
 interface LandingPageAnalyticsProps {
-  lp: LandingPage;
+  lp: ApiLandingPage;
   onBack: () => void;
 }
 
@@ -55,7 +54,6 @@ const SOURCE_DATA = [
 
 export function LandingPageAnalytics({ lp, onBack }: LandingPageAnalyticsProps) {
   const { t } = useTranslation();
-  const product = MOCK_PRODUCTS.find(p => p.id === lp.productId);
 
   return (
     <div className="p-8 space-y-8 pb-20">
