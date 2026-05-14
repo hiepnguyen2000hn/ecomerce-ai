@@ -12,17 +12,62 @@ export const clearToken = (): void => {
 export const getRefreshToken = (): string | null => localStorage.getItem(REFRESH_KEY);
 export const setRefreshToken = (t: string): void => { localStorage.setItem(REFRESH_KEY, t); };
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+function forceLogout(): never {
+  clearToken();
+  window.location.replace('/login');
+  throw new Error('Session expired');
+}
+
+async function buildHeaders(init: RequestInit): Promise<Record<string, string>> {
   const token = getToken();
-  const headers: Record<string, string> = {
+  return {
     ...(init.body && !(init.body instanceof FormData)
       ? { 'Content-Type': 'application/json' }
       : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(init.headers as Record<string, string>),
   };
+}
 
-  const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
+async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...init,
+    headers: await buildHeaders(init),
+  });
+
+  // 401 → try refresh once, then retry
+  if (res.status === 401) {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) forceLogout();
+
+    // attempt token refresh
+    const refreshRes = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!refreshRes.ok) forceLogout();
+
+    const { data } = await refreshRes.json();
+    setToken(data.accessToken);
+    setRefreshToken(data.refreshToken);
+
+    // retry original request with new token
+    const retryRes = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      headers: await buildHeaders(init),
+    });
+
+    if (!retryRes.ok) {
+      if (retryRes.status === 401) forceLogout();
+      const err = await retryRes.json().catch(() => ({ message: retryRes.statusText }));
+      throw new Error(err.message ?? 'Request failed');
+    }
+
+    if (retryRes.status === 204) return undefined as unknown as T;
+    return retryRes.json();
+  }
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
