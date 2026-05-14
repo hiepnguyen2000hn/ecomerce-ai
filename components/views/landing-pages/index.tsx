@@ -81,7 +81,7 @@ export function LandingPagesView() {
   };
 
   return (
-    <div className="h-full bg-brand-bg dark:bg-[#080808]">
+    <div className="h-full bg-[#f8f9fc] dark:bg-[#080808]">
       <AnimatePresence mode="wait">
         <motion.div
           key={view}
