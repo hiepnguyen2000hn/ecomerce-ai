@@ -204,25 +204,25 @@ export function LoginView({ onLogin }: LoginViewProps) {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] bg-white/[0.02] backdrop-blur-[80px] border border-white/[0.08] rounded-[3.5rem] overflow-hidden shadow-[0_80px_160px_rgba(0,0,0,0.8)]"
+          className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] bg-white/90 dark:bg-white/[0.02] backdrop-blur-[80px] border border-gray-200 dark:border-white/[0.08] rounded-[3.5rem] overflow-hidden shadow-[0_80px_160px_rgba(0,0,0,0.8)]"
         >
           {/* Left Column: Form */}
-          <div className="p-16 border-b md:border-b-0 md:border-r border-white/5">
+          <div className="p-16 border-b md:border-b-0 md:border-r border-gray-100 dark:border-white/5">
             <form onSubmit={handleSubmit} className="space-y-10">
               <div className="space-y-8">
                 {/* Email Field */}
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">Business Identity</label>
+                  <label className="text-[10px] font-black text-gray-400 dark:text-white/30 uppercase tracking-[0.2em] ml-1">Business Identity</label>
                   <div className="relative group">
-                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-blue-500 transition-all duration-500">
+                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 dark:text-white/10 group-focus-within:text-blue-500 transition-all duration-500">
                       <Mail size={18} strokeWidth={1.5} />
                     </div>
-                    <input 
+                    <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@company.com"
-                      className="w-full h-16 bg-white/[0.03] border border-white/5 rounded-2xl pl-16 pr-6 text-sm font-bold text-white outline-none focus:bg-white/[0.06] focus:border-white/20 transition-all placeholder:text-white/5 tracking-tight"
+                      className="w-full h-16 bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/5 rounded-2xl pl-16 pr-6 text-sm font-bold text-gray-900 dark:text-white outline-none focus:bg-gray-100 dark:focus:bg-white/[0.06] focus:border-gray-300 dark:focus:border-white/20 transition-all placeholder:text-gray-300 dark:placeholder:text-white/5 tracking-tight"
                     />
                   </div>
                 </div>
@@ -230,23 +230,23 @@ export function LoginView({ onLogin }: LoginViewProps) {
                 {/* Password Field */}
                 <div className="space-y-3">
                   <div className="flex justify-between ml-1">
-                    <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Secret Key</label>
+                    <label className="text-[10px] font-black text-gray-400 dark:text-white/30 uppercase tracking-[0.2em]">Secret Key</label>
                   </div>
                   <div className="relative group">
-                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-blue-500 transition-all duration-500">
+                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 dark:text-white/10 group-focus-within:text-blue-500 transition-all duration-500">
                       <Lock size={18} strokeWidth={1.5} />
                     </div>
-                    <input 
+                    <input
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••••••"
-                      className="w-full h-16 bg-white/[0.03] border border-white/5 rounded-2xl pl-16 pr-16 text-sm font-bold text-white outline-none focus:bg-white/[0.06] focus:border-white/20 transition-all placeholder:text-white/5 tracking-tight"
+                      className="w-full h-16 bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/5 rounded-2xl pl-16 pr-16 text-sm font-bold text-gray-900 dark:text-white outline-none focus:bg-gray-100 dark:focus:bg-white/[0.06] focus:border-gray-300 dark:focus:border-white/20 transition-all placeholder:text-gray-300 dark:placeholder:text-white/5 tracking-tight"
                     />
-                    <button 
+                    <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-6 top-1/2 -translate-y-1/2 text-white/10 hover:text-white transition-all p-1"
+                      className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 dark:text-white/10 hover:text-gray-600 dark:hover:text-white transition-all p-1"
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -279,8 +279,8 @@ export function LoginView({ onLogin }: LoginViewProps) {
                 </button>
                 <div className="mt-8 flex items-center justify-center gap-2 group cursor-pointer">
                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                   <p className="text-[9px] text-white/20 font-black uppercase tracking-[0.2em] group-hover:text-white/50 transition-colors">
-                     Trouble logging in? <span className="underline decoration-white/10">Contact Support</span>
+                   <p className="text-[9px] text-gray-400 dark:text-white/20 font-black uppercase tracking-[0.2em] group-hover:text-gray-500 dark:group-hover:text-white/50 transition-colors">
+                     Trouble logging in? <span className="underline decoration-gray-200 dark:decoration-white/10">Contact Support</span>
                    </p>
                 </div>
               </div>
@@ -288,9 +288,9 @@ export function LoginView({ onLogin }: LoginViewProps) {
           </div>
 
           {/* Right Column: Identity Nodes */}
-          <div className="bg-white/[0.01] p-12 flex flex-col justify-between space-y-12">
+          <div className="bg-gray-50/50 dark:bg-white/[0.01] p-12 flex flex-col justify-between space-y-12">
             <div className="space-y-8">
-              <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em]">Access Nodes</label>
+              <label className="text-[10px] font-black text-gray-400 dark:text-white/30 uppercase tracking-[0.3em]">Access Nodes</label>
               
               <div className="space-y-4">
                 {[
@@ -301,7 +301,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
                   <button 
                     key={social.name}
                     type="button"
-                    className="w-full h-16 bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] hover:border-white/10 rounded-2xl flex items-center px-6 gap-5 transition-all group shadow-sm"
+                    className="w-full h-16 bg-white dark:bg-white/[0.04] border border-gray-100 dark:border-white/[0.06] hover:bg-gray-50 dark:hover:bg-white/[0.08] hover:border-gray-200 dark:hover:border-white/10 rounded-2xl flex items-center px-6 gap-5 transition-all group shadow-sm"
                   >
                     <div className="w-6 h-6 flex items-center justify-center shrink-0 relative">
                       <Image 
@@ -312,7 +312,7 @@ export function LoginView({ onLogin }: LoginViewProps) {
                         referrerPolicy="no-referrer"
                       />
                     </div>
-                    <span className="text-[11px] font-bold text-white/30 group-hover:text-white transition-colors tracking-tight">Login with {social.name}</span>
+                    <span className="text-[11px] font-bold text-gray-500 dark:text-white/30 group-hover:text-gray-900 dark:group-hover:text-white transition-colors tracking-tight">Login with {social.name}</span>
                   </button>
                 ))}
               </div>
@@ -320,22 +320,22 @@ export function LoginView({ onLogin }: LoginViewProps) {
 
             <div className="space-y-6">
               <div className="flex items-center gap-4 group cursor-pointer">
-                <div className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-center text-white/20 group-hover:text-blue-500 transition-all">
+                <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.05] flex items-center justify-center text-gray-400 dark:text-white/20 group-hover:text-blue-500 transition-all">
                   <Sparkles size={18} strokeWidth={1.5} />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Master Key</span>
-                  <span className="text-[11px] font-bold text-white/20 group-hover:text-white transition-colors mt-0.5">Initialize Biometrics</span>
+                  <span className="text-[10px] font-black text-gray-400 dark:text-white/40 uppercase tracking-widest">Master Key</span>
+                  <span className="text-[11px] font-bold text-gray-400 dark:text-white/20 group-hover:text-gray-900 dark:group-hover:text-white transition-colors mt-0.5">Initialize Biometrics</span>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-4 group cursor-pointer">
-                <div className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-center text-white/20 group-hover:text-blue-500 transition-all">
+                <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.05] flex items-center justify-center text-gray-400 dark:text-white/20 group-hover:text-blue-500 transition-all">
                   <Globe size={18} strokeWidth={1.5} />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Global Status</span>
-                  <span className="text-[11px] font-bold text-white/20 group-hover:text-white transition-colors mt-0.5">Nodes Connected: 124</span>
+                  <span className="text-[10px] font-black text-gray-400 dark:text-white/40 uppercase tracking-widest">Global Status</span>
+                  <span className="text-[11px] font-bold text-gray-400 dark:text-white/20 group-hover:text-gray-900 dark:group-hover:text-white transition-colors mt-0.5">Nodes Connected: 124</span>
                 </div>
               </div>
             </div>
