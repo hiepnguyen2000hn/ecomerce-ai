@@ -6,9 +6,11 @@ import { currentUserAtom } from '@/lib/store';
 import { login as apiLogin, getMe, logout as apiLogout } from '@/lib/api/auth';
 import { getToken } from '@/lib/api/client';
 import { showToast } from '@/lib/toast';
+import { useRouter } from 'next/navigation';
 
 export function useLogin() {
   const setCurrentUser = useSetAtom(currentUserAtom);
+  const router = useRouter();
 
   return useMutation({
     mutationFn: ({ email, password }: { email: string; password: string }) =>
@@ -17,6 +19,7 @@ export function useLogin() {
       const user = await getMe();
       setCurrentUser(user);
       showToast.success('Access Granted', `Welcome back, ${user.email}`);
+      router.push('/inventory');
     },
     onError: (err: Error) => {
       showToast.error('Login Failed', err.message);
@@ -27,12 +30,14 @@ export function useLogin() {
 export function useLogout() {
   const setCurrentUser = useSetAtom(currentUserAtom);
   const queryClient    = useQueryClient();
+  const router         = useRouter();
 
   return () => {
     apiLogout();
     setCurrentUser(null);
     queryClient.clear();
     showToast.success('Logged out', 'Secure connection terminated.');
+    router.replace('/login');
   };
 }
 

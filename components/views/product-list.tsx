@@ -2,15 +2,16 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Search, 
-  Filter, 
-  Grid2X2, 
-  List, 
+import {
+  Search,
+  Filter,
+  Grid2X2,
+  List,
   ExternalLink,
   ChevronLeft,
   ChevronRight,
-  AlertCircle
+  AlertCircle,
+  Plus
 } from 'lucide-react';
 import type { ApiProduct } from '@/lib/api/types';
 import { staticUrl } from '@/lib/api/config';
@@ -20,13 +21,14 @@ import { useTranslation } from 'react-i18next';
 
 interface ProductListProps {
   onEditProduct: (product: ApiProduct) => void;
+  onCreateProduct: () => void;
 }
 
 import { SlidingNumber } from '@/components/animate-ui/sliding-number';
 
 import { useProducts } from '@/lib/hooks/use-products';
 
-export function ProductList({ onEditProduct }: ProductListProps) {
+export function ProductList({ onEditProduct, onCreateProduct }: ProductListProps) {
   const { t } = useTranslation();
   const [activeStatus, setActiveStatus] = useState('All');
   const [viewLayout, setViewLayout] = useState<'grid' | 'list'>('grid');
@@ -68,7 +70,7 @@ export function ProductList({ onEditProduct }: ProductListProps) {
 
   return (
     <div className="px-12 py-12 pb-32">
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-6 mb-12">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto_auto] gap-6 mb-12">
         <div className="relative flex items-center group">
           <Search size={16} className="absolute left-5 text-gray-400 group-focus-within:text-black dark:group-focus-within:text-white transition-colors" />
           <input 
@@ -115,7 +117,7 @@ export function ProductList({ onEditProduct }: ProductListProps) {
           </AnimatePresence>
         </div>
         <div className="flex p-1.5 bg-white dark:bg-[#121212] border border-gray-100 dark:border-white/5 rounded-2xl">
-          <button 
+          <button
             onClick={() => setViewLayout('grid')}
             className={cn(
               "p-2.5 rounded-xl transition-all",
@@ -124,7 +126,7 @@ export function ProductList({ onEditProduct }: ProductListProps) {
           >
             <Grid2X2 size={18} />
           </button>
-          <button 
+          <button
             onClick={() => setViewLayout('list')}
             className={cn(
               "p-2.5 rounded-xl transition-all",
@@ -134,6 +136,13 @@ export function ProductList({ onEditProduct }: ProductListProps) {
             <List size={18} />
           </button>
         </div>
+        <button
+          onClick={onCreateProduct}
+          className="flex items-center gap-2 px-6 py-3.5 bg-[#1D4ED8] hover:bg-blue-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 active:scale-95 transition-all whitespace-nowrap"
+        >
+          <Plus size={16} />
+          New Product
+        </button>
       </div>
 
       <div className="space-y-6 mb-16">
