@@ -2,10 +2,18 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  listProducts, createProduct, updateProduct,
+  listProducts, getProduct, createProduct, updateProduct,
   deleteProduct, transitionLifecycle,
 } from '@/lib/api/products';
 import type { CreateProductDto, ProductsListParams, LifecycleTransitionDto } from '@/lib/api/types';
+
+export function useProduct(id: string) {
+  return useQuery({
+    queryKey: ['products', id],
+    queryFn: () => getProduct(id),
+    enabled: !!id,
+  });
+}
 
 export function useProducts(params: ProductsListParams = {}) {
   return useQuery({
