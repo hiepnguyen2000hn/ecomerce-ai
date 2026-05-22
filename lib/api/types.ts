@@ -22,33 +22,23 @@ export interface UserMe {
 export type LifecycleStage = 'DRAFT' | 'TESTING' | 'SCALING' | 'MATURE' | 'STOPPED';
 export type ProductStatus = 'ACTIVE' | 'LOW_STOCK' | 'OUT_OF_STOCK';
 
-export interface VariantOption {
+export interface VariantInGroup {
   id: string;
-  groupId: string;
+  optionId: string;
   name: string;
-  skuSuffix: string | null;
-  priceDelta: string;
+  sku: string;
+  priceAmount: string;
+  currency: string;
+  stockQty: number;
   imageUrl: string | null;
   position: number;
 }
 
 export interface VariantGroup {
   id: string;
-  productId: string;
   name: string;
   position: number;
-  options: VariantOption[];
-}
-
-export interface ProductVariant {
-  id: string;
-  productId: string;
-  sku: string;
-  optionCombinationJson: Record<string, string>;
-  priceAmount: string;
-  currency: string;
-  stockQty: number;
-  position: number;
+  variants: VariantInGroup[];
 }
 
 export interface ProductImage {
@@ -79,10 +69,10 @@ export interface ApiProduct {
   primaryImageUrl?: string;
   createdById?: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
   deletedAt?: string | null;
+  variantSummary?: string[];
   variantGroups?: VariantGroup[];
-  variants?: ProductVariant[];
   images?: ProductImage[];
 }
 
@@ -109,6 +99,38 @@ export interface CreateProductDto {
   retailPriceAmount?: number;
   retailPriceCurrency?: string;
   marketCodes?: string[];
+}
+
+export interface UpdateProductVariantDto {
+  id?: string;
+  name?: string;
+  sku?: string;
+  priceAmount?: number;
+  currency?: string;
+  stockQty?: number;
+  imageUrl?: string | null;
+  position?: number;
+}
+
+export interface UpdateProductVariantGroupDto {
+  id?: string;
+  name?: string;
+  position?: number;
+  variants?: UpdateProductVariantDto[];
+}
+
+export interface UpdateProductDto {
+  sku?: string;
+  name?: string;
+  slug?: string;
+  description?: string;
+  weightGrams?: number;
+  cogsAmount?: number;
+  cogsCurrency?: string;
+  retailPriceAmount?: number;
+  retailPriceCurrency?: string;
+  marketCodes?: string[];
+  variantGroups?: UpdateProductVariantGroupDto[];
 }
 
 export interface ProductsListParams {
@@ -156,6 +178,7 @@ export interface CreateVariantDto {
 }
 
 export interface UpdateVariantDto {
+  name?: string;
   priceAmount?: number;
   currency?: string;
   stockQty?: number;
@@ -244,4 +267,93 @@ export type UpdateLandingPageDto = Partial<CreateLandingPageDto>;
 export interface StatusTransitionDto {
   toStatus: LandingPageStatus;
   reason?: string;
+}
+
+// Lp Batch
+export type LpBatchStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+
+export interface ApiLpBatch {
+  id: string;
+  productId: string;
+  count: number;
+  lang: string;
+  contentSource: 'AI_AUTO' | 'GOOGLE_DRIVE';
+  templateStrategy: 'AI_OPTIMIZE' | 'MANUAL';
+  templateIds?: string[];
+  driveFileIds?: string[];
+  status: LpBatchStatus;
+  generatedLpIds?: string[];
+  errorMessage?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateLpBatchResponse {
+  status: number;
+  data: {
+    batchJobId: string;
+    status: LpBatchStatus;
+  };
+}
+
+export interface CreateLpBatchDto {
+  productId: string;
+  count: number;
+  lang: string;
+  contentSource: 'AI_AUTO' | 'GOOGLE_DRIVE';
+  templateStrategy: 'AI_OPTIMIZE' | 'MANUAL';
+  templateIds?: string[];
+  driveFileIds?: string[];
+  driveAuthCode?: string;
+}
+
+// Lp Batch — Landing Pages (portfolio + detail)
+export type LpBatchLpStatus = 'DRAFT' | 'NEEDS_REVIEW' | 'PUBLISHED' | 'ARCHIVED';
+
+export interface ApiLpBatchLandingPage {
+  id: string;
+  productId?: string;
+  batchId?: string;
+  templateId?: string;
+  code: string;
+  marketCode?: string;
+  lang?: string;
+  slug?: string;
+  status: LpBatchLpStatus;
+  htmlUrl?: string;
+  publicUrl?: string;
+  thumbnailUrl?: string | null;
+  analytics?: {
+    impressions?: number;   // → TRAFFIC: Total views
+    clicks?: number;        // → TRAFFIC: Users
+    conversions?: number;   // → ORDER count
+    cvr?: number;           // → CVR (decimal, x100 để hiện %)
+    revenue?: number;       // → CPA = revenue / conversions
+    confidence?: number;    // → CONF. (decimal 0–1, x100 → %)
+    aiDiagnosis?: string;   // → AI DIAGNOSIS badge text
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LpBatchLandingPagesParams {
+  productId?: string;
+  status?: LpBatchLpStatus;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface LpBatchLandingPagesListResponse {
+  data: ApiLpBatchLandingPage[];
+  meta: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface TransitionLpStatusDto {
+  toStatus: 'DRAFT' | 'PUBLISHED';
 }

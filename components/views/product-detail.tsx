@@ -9,17 +9,20 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { useUpdateProduct } from '@/lib/hooks/use-products';
-import { createVariantGroup, deleteVariantGroup } from '@/lib/api/products';
+import { uploadProductImage } from '@/lib/api/products';
 import { showToast } from '@/lib/toast';
 
 const DEFAULT_IMAGE = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800' viewBox='0 0 800 800'%3E%3Crect width='800' height='800' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='system-ui' font-size='80' fill='%23d1d5db'%3E📦%3C/text%3E%3C/svg%3E`;
 
 interface LocalVariantOption {
   id: string;
+  apiId?: string;
   name: string;
   skuSuffix: string;
   price: string;
   stock: string;
+  imagePreview?: string;
+  imageFile?: File;
 }
 
 interface LocalVariantGroup {
@@ -37,6 +40,7 @@ interface ProductDetailProps {
 export function ProductDetail({ product, onBack }: ProductDetailProps) {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const variantFileInputs = useRef<Map<string, HTMLInputElement>>(new Map());
 
   // Controlled form state pre-filled from API
   const [name, setName] = useState(product.name);
@@ -59,14 +63,14 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
       id: g.id,
       apiId: g.id,
       name: g.name,
-      options: g.options.map(o => ({
-        id: o.id,
-        name: o.name,
-        skuSuffix: o.skuSuffix ?? '',
-        price: o.priceDelta ?? '',
-        stock: product.variants?.find(v =>
-          Object.values(v.optionCombinationJson).includes(o.name)
-        )?.stockQty?.toString() ?? '0',
+      options: g.variants.map(v => ({
+        id: v.id,
+        apiId: v.id,
+        name: v.name,
+        skuSuffix: v.sku.startsWith(product.sku + '-') ? v.sku.slice(product.sku.length + 1) : v.sku,
+        price: v.priceAmount,
+        stock: v.stockQty.toString(),
+        imagePreview: v.imageUrl ? staticUrl(v.imageUrl) : undefined,
       })),
     }))
   );
@@ -95,16 +99,7 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
     }));
   };
 
-  const removeVariantGroup = async (groupId: string) => {
-    const group = variantGroups.find(g => g.id === groupId);
-    if (group?.apiId) {
-      try {
-        await deleteVariantGroup(product.id, group.apiId);
-      } catch {
-        showToast.error('Failed to delete variant group');
-        return;
-      }
-    }
+  const removeVariantGroup = (groupId: string) => {
     setVariantGroups(prev => prev.filter(g => g.id !== groupId));
   };
 
@@ -126,6 +121,14 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
     }));
   };
 
+  const handleVariantImageChange = (groupId: string, optId: string, file: File) => {
+    const preview = URL.createObjectURL(file);
+    setVariantGroups(prev => prev.map(g => g.id !== groupId ? g : {
+      ...g,
+      options: g.options.map(o => o.id !== optId ? o : { ...o, imagePreview: preview, imageFile: file }),
+    }));
+  };
+
   // ── Save ─────────────────────────────────────────────────────
   const handleSave = async () => {
     if (!name.trim()) {
@@ -142,20 +145,25 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
           retailPriceCurrency: retailPrice !== '' ? (product.retailPriceCurrency ?? 'USD') : undefined,
           cogsAmount: cogsAmount !== '' ? Number(cogsAmount) : undefined,
           cogsCurrency: cogsAmount !== '' ? (product.cogsCurrency ?? 'USD') : undefined,
+          variantGroups: variantGroups.map((group, gi) => ({
+            id: group.apiId,
+            name: group.name,
+            position: gi,
+            variants: group.options.map((opt, oi) => ({
+              id: opt.apiId,
+              name: opt.name,
+              priceAmount: opt.price ? parseFloat(opt.price) : undefined,
+              stockQty: opt.stock ? parseInt(opt.stock, 10) : undefined,
+              position: oi,
+            })),
+          })),
         },
       });
 
-      // Create new variant groups (those without an apiId)
-      for (const group of variantGroups.filter(g => !g.apiId)) {
-        await createVariantGroup(product.id, {
-          name: group.name,
-          options: group.options.map((opt, i) => ({
-            name: opt.name,
-            skuSuffix: opt.skuSuffix || undefined,
-            priceDelta: opt.price ? parseFloat(opt.price) : undefined,
-            position: i,
-          })),
-        });
+      // Upload any newly-selected variant images
+      const variantImageUploads = variantGroups.flatMap(g => g.options).filter(o => o.imageFile);
+      for (const opt of variantImageUploads) {
+        await uploadProductImage(product.id, opt.imageFile!, opt.name, false);
       }
 
       showToast.success('Product updated');
@@ -171,15 +179,15 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
     <div className="flex flex-col h-full bg-[#f8f9fc] dark:bg-[#050505] overflow-y-auto no-scrollbar">
       {/* Header */}
       <div className="sticky top-0 z-50 flex items-center justify-between px-10 py-6 bg-[#f8f9fc]/80 dark:bg-[#050505]/80 backdrop-blur-md">
-        <div className="flex items-center gap-2 text-xs font-medium text-gray-400">
-          <span
-            className="hover:text-black dark:hover:text-white cursor-pointer transition-colors"
+        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-gray-500 min-w-0">
+          <button
             onClick={onBack}
+            className="hover:text-white transition-colors shrink-0"
           >
             {t('nav.products')}
-          </span>
-          <ChevronRight size={14} className="text-gray-300" />
-          <span className="text-black dark:text-white font-bold">{product.name}</span>
+          </button>
+          <ChevronRight size={12} className="text-gray-600 shrink-0" />
+          <span className="text-white/70 truncate">{product.name}</span>
         </div>
 
         <div className="flex items-center gap-6">
@@ -380,9 +388,47 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
                           exit={{ opacity: 0, x: 10 }}
                           className="flex items-center gap-6 bg-[#fcfdfe] dark:bg-[#080808] p-5 rounded-[32px] border border-gray-50 dark:border-white/5 group hover:border-blue-600/10 dark:hover:border-blue-600/20 transition-all"
                         >
-                          <div className="w-14 h-14 rounded-2xl flex items-center justify-center font-black text-[10px] tracking-tighter shadow-sm shrink-0 bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 uppercase">
-                            {opt.skuSuffix || opt.name.slice(0, 2) || '??'}
-                          </div>
+                          {/* Variant image upload */}
+                          <button
+                            type="button"
+                            onClick={() => variantFileInputs.current.get(opt.id)?.click()}
+                            className="relative w-14 h-14 rounded-2xl shrink-0 overflow-hidden bg-gray-100 dark:bg-white/5 flex items-center justify-center group/img hover:ring-2 hover:ring-blue-500/40 transition-all"
+                            title="Upload variant image"
+                          >
+                            {opt.imagePreview ? (
+                              <Image
+                                src={opt.imagePreview}
+                                alt={opt.name}
+                                fill
+                                className="object-cover"
+                                unoptimized={opt.imagePreview.startsWith('blob:')}
+                              />
+                            ) : (
+                              <span className="font-black text-[10px] tracking-tighter text-gray-600 dark:text-gray-400 uppercase group-hover/img:opacity-0 transition-opacity">
+                                {opt.skuSuffix || opt.name.slice(0, 2) || '??'}
+                              </span>
+                            )}
+                            <div className={cn(
+                              'absolute inset-0 flex items-center justify-center bg-black/50 transition-opacity',
+                              opt.imagePreview ? 'opacity-0 group-hover/img:opacity-100' : 'opacity-0 group-hover/img:opacity-100',
+                            )}>
+                              <ImageIcon size={16} className="text-white" />
+                            </div>
+                          </button>
+                          <input
+                            ref={el => {
+                              if (el) variantFileInputs.current.set(opt.id, el);
+                              else variantFileInputs.current.delete(opt.id);
+                            }}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={e => {
+                              const file = e.target.files?.[0];
+                              if (file) handleVariantImageChange(group.id, opt.id, file);
+                              e.target.value = '';
+                            }}
+                          />
                           <div className="flex-1 min-w-0 space-y-1">
                             <input
                               type="text"

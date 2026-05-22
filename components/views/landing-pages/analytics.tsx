@@ -17,7 +17,7 @@ import {
   Sparkles,
   ArrowRight
 } from 'lucide-react';
-import type { ApiLandingPage } from '@/lib/api/types';
+import type { ApiLpBatchLandingPage } from '@/lib/api/types';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -34,7 +34,7 @@ import {
 } from 'recharts';
 
 interface LandingPageAnalyticsProps {
-  lp: ApiLandingPage;
+  lp: ApiLpBatchLandingPage;
   onBack: () => void;
 }
 

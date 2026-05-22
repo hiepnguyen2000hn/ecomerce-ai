@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Filter, Grid2X2, List, ExternalLink,
-  ChevronLeft, ChevronRight, AlertCircle, Plus, X, Check, RotateCcw
+  ChevronLeft, ChevronRight, AlertCircle, Plus, X, Check, RotateCcw,
+  MoreVertical, Pencil, Trash2, BarChart2, AlertTriangle, Package,
 } from 'lucide-react';
 import type { ApiProduct, LifecycleStage, ProductStatus } from '@/lib/api/types';
 import { staticUrl } from '@/lib/api/config';
@@ -12,12 +13,14 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { SlidingNumber } from '@/components/animate-ui/sliding-number';
-import { useProducts } from '@/lib/hooks/use-products';
+import { useProducts, useDeleteProduct } from '@/lib/hooks/use-products';
 import type { ProductsListParams } from '@/lib/api/types';
+import { showToast } from '@/lib/toast';
 
 interface ProductListProps {
   onEditProduct: (product: ApiProduct) => void;
   onCreateProduct: () => void;
+  onViewAnalytics?: (product: ApiProduct) => void;
 }
 
 const LIFECYCLE_STAGES: LifecycleStage[] = ['DRAFT', 'TESTING', 'SCALING', 'MATURE', 'STOPPED'];
@@ -31,10 +34,34 @@ const SORT_OPTIONS = [
 ];
 
 const STATUS_COLORS: Record<ProductStatus, string> = {
-  ACTIVE:       'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400',
-  LOW_STOCK:    'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400',
-  OUT_OF_STOCK: 'bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400',
+  ACTIVE:       'bg-emerald-500 text-white',
+  LOW_STOCK:    'bg-amber-500 text-white',
+  OUT_OF_STOCK: 'bg-red-600 text-white',
 };
+
+function ProductImage({ src, alt, className }: { src: string | null | undefined; alt: string; className?: string }) {
+  const [failed, setFailed] = useState(!src);
+
+  if (failed || !src) {
+    return (
+      <div className={cn('w-full h-full flex flex-col items-center justify-center gap-2', className)}>
+        <Package size={28} className="text-gray-300 dark:text-white/15" />
+        <span className="text-[9px] font-black uppercase tracking-widest text-gray-300 dark:text-white/15">No image</span>
+      </div>
+    );
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      className="object-cover group-hover:scale-110 transition-transform duration-1000 ease-out grayscale group-hover:grayscale-0"
+      referrerPolicy="no-referrer"
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
 function MultiChip({
   label, active, onClick,
@@ -56,7 +83,7 @@ function MultiChip({
   );
 }
 
-export function ProductList({ onEditProduct, onCreateProduct }: ProductListProps) {
+export function ProductList({ onEditProduct, onCreateProduct, onViewAnalytics }: ProductListProps) {
   const { t } = useTranslation();
 
   // ── Search (debounced) ──
@@ -92,8 +119,18 @@ export function ProductList({ onEditProduct, onCreateProduct }: ProductListProps
     setIncludeDeleted(false);
   };
 
+  // ── Pagination ──
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedQ, activeLifecycle, sort, statusFilter, marketInput, includeDeleted]);
+
   // ── Build API params ──
   const params: ProductsListParams = {
+    page,
+    pageSize: PAGE_SIZE,
     q:              debouncedQ || undefined,
     sort:           sort || undefined,
     lifecycleStage: activeLifecycle !== 'All' ? [activeLifecycle] : undefined,
@@ -104,7 +141,29 @@ export function ProductList({ onEditProduct, onCreateProduct }: ProductListProps
     includeDeleted: includeDeleted || undefined,
   };
 
-  const { data: products = [], isLoading, error } = useProducts(params);
+  const { data: listResponse, isLoading, error } = useProducts(params);
+  const products = listResponse?.data ?? [];
+  const meta = listResponse?.meta;
+
+  const { mutateAsync: deleteProduct, isPending: isDeleting } = useDeleteProduct();
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteProduct(id);
+      showToast.success('Product deleted');
+      setOpenMenuId(null);
+      setConfirmDeleteId(null);
+    } catch {
+      showToast.error('Failed to delete product');
+    }
+  };
+
+  const closeMenu = () => {
+    setOpenMenuId(null);
+    setConfirmDeleteId(null);
+  };
 
   const [viewLayout, setViewLayout] = useState<'grid' | 'list'>('grid');
 
@@ -203,23 +262,21 @@ export function ProductList({ onEditProduct, onCreateProduct }: ProductListProps
                     {/* Sort */}
                     <div className="space-y-3">
                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] block">Sort by</label>
-                      <div className="grid grid-cols-1 gap-1.5">
-                        {SORT_OPTIONS.map(opt => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => setSort(opt.value)}
-                            className={cn(
-                              'flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-left',
-                              sort === opt.value
-                                ? 'bg-black dark:bg-white text-white dark:text-black'
-                                : 'bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10',
-                            )}
-                          >
-                            {opt.label}
-                            {sort === opt.value && <Check size={12} strokeWidth={3} />}
-                          </button>
-                        ))}
+                      <div className="relative">
+                        <select
+                          value={sort}
+                          onChange={e => setSort(e.target.value)}
+                          className="w-full appearance-none px-4 py-3 pr-10 bg-gray-50 dark:bg-white/5 border border-transparent focus:border-blue-600/30 rounded-xl text-xs font-bold text-black dark:text-white outline-none transition-all cursor-pointer"
+                        >
+                          {SORT_OPTIONS.map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                            <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
                       </div>
                     </div>
 
@@ -361,7 +418,7 @@ export function ProductList({ onEditProduct, onCreateProduct }: ProductListProps
           <p className="text-xs font-medium mt-2 opacity-60">Try adjusting your filters</p>
         </div>
       ) : (
-        <div className={cn('grid gap-10', viewLayout === 'grid' ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1')}>
+        <div className={cn('grid gap-5', viewLayout === 'grid' ? 'grid-cols-2 xl:grid-cols-4' : 'grid-cols-1')}>
           <AnimatePresence mode="popLayout">
             {products.map((p, i) => (
               <motion.div
@@ -372,71 +429,85 @@ export function ProductList({ onEditProduct, onCreateProduct }: ProductListProps
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: i * 0.04 }}
                 className={cn(
-                  'bg-white dark:bg-[#0c0c0c] border border-gray-100 dark:border-white/5 rounded-[40px] overflow-hidden group hover:border-black/20 dark:hover:border-white/20 transition-all duration-500 flex flex-col shadow-sm dark:shadow-none',
+                  'bg-white dark:bg-[#0c0c0c] border border-gray-100 dark:border-white/5 rounded-[28px] overflow-hidden group hover:border-black/20 dark:hover:border-white/20 transition-all duration-500 flex flex-col shadow-sm dark:shadow-none',
                   viewLayout === 'list' && 'flex-row h-40 md:h-48',
                 )}
               >
-                <div className={cn('p-8 pb-0 flex items-start justify-between shrink-0', viewLayout === 'list' && 'hidden')}>
-                  <div className="flex flex-col gap-3">
-                    <div className="font-mono text-[10px] text-gray-400 dark:text-gray-600 uppercase tracking-widest">{p.sku}</div>
-                    <div className="flex gap-2 flex-wrap">
+                <div className={cn('p-4 pb-0 flex items-start justify-between shrink-0', viewLayout === 'list' && 'hidden')}>
+                  <div className="flex flex-col gap-1.5">
+                    <div className="font-mono text-xs font-bold text-gray-800 dark:text-white/75 uppercase tracking-wider">{p.sku}</div>
+                    <div className="flex gap-1.5 flex-wrap">
                       <span className={cn(
-                        'px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm',
+                        'px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider',
                         p.lifecycleStage === 'SCALING' ? 'bg-blue-600 text-white' :
-                        p.lifecycleStage === 'TESTING' ? 'bg-black dark:bg-white text-white dark:text-black' :
-                        'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
+                        p.lifecycleStage === 'TESTING' ? 'bg-violet-600 text-white' :
+                        p.lifecycleStage === 'MATURE'  ? 'bg-emerald-600 text-white' :
+                        p.lifecycleStage === 'STOPPED' ? 'bg-red-600 text-white' :
+                        'bg-gray-500 text-white',
                       )}>
                         {p.lifecycleStage}
                       </span>
                       {p.status && (
-                        <span className={cn('px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest', STATUS_COLORS[p.status])}>
+                        <span className={cn('px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider', STATUS_COLORS[p.status])}>
                           {p.status.replace('_', ' ')}
                         </span>
                       )}
                     </div>
                   </div>
+
+                  {/* Action icons */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => onEditProduct(p)}
+                      className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-all"
+                    >
+                      <ExternalLink size={14} />
+                    </button>
+                    <button
+                      onClick={() => onViewAnalytics?.(p)}
+                      className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
+                    >
+                      <BarChart2 size={14} />
+                    </button>
+                  </div>
                 </div>
 
-                <div className={cn('p-8 flex-1 flex flex-col', viewLayout === 'list' && 'flex-row items-center p-6 gap-8 pb-6')}>
+                <div className={cn('p-4 flex-1 flex flex-col', viewLayout === 'list' && 'flex-row items-center p-6 gap-8 pb-6')}>
                   <div className={cn(
-                    'relative rounded-[32px] overflow-hidden bg-gray-50 dark:bg-black/40 border border-gray-100 dark:border-white/5 shrink-0',
-                    viewLayout === 'grid' ? 'w-full aspect-[16/10] mb-10' : 'w-32 h-32 md:w-40 md:h-40',
+                    'relative rounded-2xl overflow-hidden bg-gray-50 dark:bg-black/40 border border-gray-100 dark:border-white/5 shrink-0',
+                    viewLayout === 'grid' ? 'w-full aspect-video mb-3' : 'w-32 h-32 md:w-40 md:h-40',
                   )}>
-                    <Image
-                      src={staticUrl(p.primaryImageUrl) || `https://picsum.photos/seed/${p.sku}/800/800`}
-                      alt={p.name}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-1000 ease-out grayscale group-hover:grayscale-0"
-                      referrerPolicy="no-referrer"
-                    />
+                    <ProductImage src={staticUrl(p.primaryImageUrl)} alt={p.name} />
                   </div>
 
-                  <div className="flex-1 min-w-0 flex flex-col h-full">
-                    <div className="flex items-start justify-between h-full">
+                  <div className="flex-1 min-w-0 flex flex-col">
+                    <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0 flex flex-col">
                         {viewLayout === 'list' && (
                           <div className="font-mono text-[8px] text-gray-400 uppercase tracking-[0.2em] mb-1">{p.sku}</div>
                         )}
                         <h3 className={cn(
-                          'font-display font-black text-black dark:text-white leading-none tracking-tighter uppercase group-hover:text-blue-500 transition-colors truncate',
-                          viewLayout === 'grid' ? 'text-3xl mb-4' : 'text-xl md:text-2xl mb-2',
+                          'font-display font-black text-black dark:text-white leading-tight tracking-tight uppercase group-hover:text-blue-500 transition-colors',
+                          viewLayout === 'grid' ? 'text-sm mb-1 line-clamp-2' : 'text-xl md:text-2xl mb-2',
                         )}>{p.name}</h3>
-                        <p className={cn('text-sm text-gray-500 line-clamp-2 leading-relaxed font-medium', viewLayout === 'grid' ? 'mb-8' : 'hidden md:block')}>
+                        <p className={cn('text-xs text-gray-500 line-clamp-2 leading-relaxed font-medium', viewLayout === 'grid' ? 'hidden' : 'hidden md:block')}>
                           {p.description}
                         </p>
 
                         {viewLayout === 'list' && (
                           <div className="mt-auto flex items-center gap-4 flex-wrap">
                             <span className={cn(
-                              'px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest',
+                              'px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider',
                               p.lifecycleStage === 'SCALING' ? 'bg-blue-600 text-white' :
-                              p.lifecycleStage === 'TESTING' ? 'bg-black dark:bg-white text-white dark:text-black' :
-                              'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
+                              p.lifecycleStage === 'TESTING' ? 'bg-violet-600 text-white' :
+                              p.lifecycleStage === 'MATURE'  ? 'bg-emerald-600 text-white' :
+                              p.lifecycleStage === 'STOPPED' ? 'bg-red-600 text-white' :
+                              'bg-gray-500 text-white',
                             )}>
                               {p.lifecycleStage}
                             </span>
                             {p.status && (
-                              <span className={cn('px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest', STATUS_COLORS[p.status])}>
+                              <span className={cn('px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider', STATUS_COLORS[p.status])}>
                                 {p.status.replace('_', ' ')}
                               </span>
                             )}
@@ -451,31 +522,110 @@ export function ProductList({ onEditProduct, onCreateProduct }: ProductListProps
                       </div>
 
                       {viewLayout === 'list' && (
-                        <button
-                          onClick={() => onEditProduct(p)}
-                          className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-black dark:bg-white text-white dark:text-black flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all transform group-hover:rotate-45 shadow-xl shadow-black/10 shrink-0 self-center"
-                        >
-                          <ExternalLink size={18} />
-                        </button>
+                        <div className="flex items-center gap-2 shrink-0 self-center">
+                          <button
+                            onClick={() => onEditProduct(p)}
+                            className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-black dark:bg-white text-white dark:text-black flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all transform group-hover:rotate-45 shadow-xl shadow-black/10"
+                          >
+                            <ExternalLink size={18} />
+                          </button>
+
+                          {/* Kebab menu — list view */}
+                          <div className="relative">
+                            <button
+                              onClick={e => { e.stopPropagation(); setOpenMenuId(openMenuId === p.id ? null : p.id); setConfirmDeleteId(null); }}
+                              className={cn(
+                                'w-9 h-9 rounded-full flex items-center justify-center transition-all border',
+                                openMenuId === p.id
+                                  ? 'bg-gray-100 dark:bg-white/10 border-gray-200 dark:border-white/10 text-black dark:text-white'
+                                  : 'opacity-0 group-hover:opacity-100 border-gray-100 dark:border-white/10 text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10',
+                              )}
+                            >
+                              <MoreVertical size={14} />
+                            </button>
+
+                            <AnimatePresence>
+                              {openMenuId === p.id && (
+                                <>
+                                  <div className="fixed inset-0 z-40" onClick={closeMenu} />
+                                  <motion.div
+                                    initial={{ opacity: 0, scale: 0.92, y: -4 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.92, y: -4 }}
+                                    transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                                    className="absolute right-0 top-11 z-50 w-44 bg-white dark:bg-[#111] border border-gray-100 dark:border-white/8 rounded-2xl shadow-xl overflow-hidden"
+                                  >
+                                    {confirmDeleteId === p.id ? (
+                                      <div className="p-3 space-y-2">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 px-1">Delete product?</p>
+                                        <button
+                                          onClick={() => handleDelete(p.id)}
+                                          disabled={isDeleting}
+                                          className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
+                                        >
+                                          <Trash2 size={12} />
+                                          {isDeleting ? 'Deleting…' : 'Confirm delete'}
+                                        </button>
+                                        <button
+                                          onClick={() => setConfirmDeleteId(null)}
+                                          className="w-full px-3 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black dark:hover:text-white transition-colors"
+                                        >
+                                          Cancel
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <button
+                                          onClick={() => { onEditProduct(p); closeMenu(); }}
+                                          className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-black dark:hover:text-white transition-all"
+                                        >
+                                          <Pencil size={13} />
+                                          Edit
+                                        </button>
+                                        <div className="h-px bg-gray-50 dark:bg-white/5 mx-3" />
+                                        <button
+                                          onClick={() => setConfirmDeleteId(p.id)}
+                                          className="w-full flex items-center gap-3 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                                        >
+                                          <Trash2 size={13} />
+                                          Delete
+                                        </button>
+                                      </>
+                                    )}
+                                  </motion.div>
+                                </>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        </div>
                       )}
                     </div>
 
                     {viewLayout === 'grid' && (
-                      <div className="mt-auto flex items-center justify-between pt-8 border-t border-gray-100 dark:border-white/5">
-                        <div className="flex flex-col">
-                          <span className="text-[9px] font-bold text-gray-400 dark:text-gray-600 uppercase tracking-[0.2em] mb-1">{t('common.available_variants')}</span>
-                          <span className="text-xs font-mono text-gray-500">
-                            {p.variants && p.variants.length > 0
-                              ? p.variants.map(v => v.sku).join(', ')
-                              : '—'}
-                          </span>
+                      <div className="pt-3 grid grid-cols-2 gap-1.5">
+                        {/* ROAS */}
+                        <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-2.5">
+                          <p className="text-[8px] font-black uppercase tracking-widest text-gray-400 mb-1">ROAS</p>
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs font-black text-red-500">1.8x</span>
+                            <AlertTriangle size={10} className="text-red-500 shrink-0" />
+                          </div>
                         </div>
-                        <button
-                          onClick={() => onEditProduct(p)}
-                          className="w-12 h-12 rounded-full bg-black dark:bg-white text-white dark:text-black flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all transform group-hover:rotate-45 shadow-xl shadow-black/10"
-                        >
-                          <ExternalLink size={20} />
-                        </button>
+                        {/* Actual Profit */}
+                        <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-2.5">
+                          <p className="text-[8px] font-black uppercase tracking-widest text-gray-400 mb-1">Actual Profit</p>
+                          <span className="text-xs font-black text-black dark:text-white">VND 1,100</span>
+                        </div>
+                        {/* Total Spend */}
+                        <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-2.5">
+                          <p className="text-[8px] font-black uppercase tracking-widest text-gray-400 mb-1">Total Spend</p>
+                          <span className="text-xs font-black text-black dark:text-white">VND 3,000</span>
+                        </div>
+                        {/* Revenue */}
+                        <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-2.5">
+                          <p className="text-[8px] font-black uppercase tracking-widest text-gray-400 mb-1">Revenue</p>
+                          <span className="text-xs font-black text-black dark:text-white">VND 7.2</span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -490,18 +640,47 @@ export function ProductList({ onEditProduct, onCreateProduct }: ProductListProps
       <div className="mt-24 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <p className="text-xs font-bold text-gray-400 dark:text-gray-600 uppercase tracking-widest">{t('common.showing')}</p>
-          <SlidingNumber value={products.length} className="text-xs font-black text-black dark:text-white" />
-          <p className="text-xs font-bold text-gray-400 dark:text-gray-600 uppercase tracking-widest">{t('common.products').toUpperCase()}</p>
+          {meta ? (
+            <>
+              <SlidingNumber value={(meta.page - 1) * meta.pageSize + 1} className="text-xs font-black text-black dark:text-white" />
+              <span className="text-xs font-bold text-gray-400 dark:text-gray-600">–</span>
+              <SlidingNumber value={Math.min(meta.page * meta.pageSize, meta.total)} className="text-xs font-black text-black dark:text-white" />
+              <p className="text-xs font-bold text-gray-400 dark:text-gray-600 uppercase tracking-widest">of</p>
+              <SlidingNumber value={meta.total} className="text-xs font-black text-black dark:text-white" />
+              <p className="text-xs font-bold text-gray-400 dark:text-gray-600 uppercase tracking-widest">{t('common.products').toUpperCase()}</p>
+            </>
+          ) : (
+            <>
+              <SlidingNumber value={products.length} className="text-xs font-black text-black dark:text-white" />
+              <p className="text-xs font-bold text-gray-400 dark:text-gray-600 uppercase tracking-widest">{t('common.products').toUpperCase()}</p>
+            </>
+          )}
         </div>
-        <div className="flex items-center gap-3 text-black dark:text-white">
-          <button className="p-3 border border-gray-100 dark:border-white/5 rounded-full text-gray-400 hover:text-black dark:hover:text-white hover:border-black dark:hover:border-white transition-all">
-            <ChevronLeft size={16} />
-          </button>
-          <button className="w-10 h-10 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black rounded-full font-black text-xs">1</button>
-          <button className="p-3 border border-gray-100 dark:border-white/5 rounded-full text-gray-400 hover:text-black dark:hover:text-white hover:border-black dark:hover:border-white transition-all">
-            <ChevronRight size={16} />
-          </button>
-        </div>
+        {meta && meta.totalPages > 1 && (
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl border border-gray-100 dark:border-white/10 text-xs font-black uppercase tracking-widest disabled:opacity-30 hover:border-gray-300 dark:hover:border-white/20 transition-all"
+            >
+              <ChevronLeft size={14} />
+              Prev
+            </button>
+
+            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+              {page} / {meta.totalPages}
+            </span>
+
+            <button
+              onClick={() => setPage(p => Math.min(meta.totalPages, p + 1))}
+              disabled={page >= meta.totalPages}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-2xl border border-gray-100 dark:border-white/10 text-xs font-black uppercase tracking-widest disabled:opacity-30 hover:border-gray-300 dark:hover:border-white/20 transition-all"
+            >
+              Next
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

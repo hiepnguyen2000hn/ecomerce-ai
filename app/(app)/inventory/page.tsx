@@ -11,6 +11,7 @@ export default function InventoryPage() {
     <ProductList
       onEditProduct={(product: ApiProduct) => router.push(`/inventory/${product.id}`)}
       onCreateProduct={() => router.push('/inventory/create')}
+      onViewAnalytics={(product: ApiProduct) => router.push(`/inventory/${product.id}/analytics`)}
     />
   );
 }

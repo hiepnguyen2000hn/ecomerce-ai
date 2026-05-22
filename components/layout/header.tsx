@@ -36,10 +36,11 @@ import { userDisplayRole } from '@/lib/api/types';
 interface HeaderProps {
   title: string;
   breadcrumbs?: string[];
+  centerContent?: React.ReactNode;
   onLogout?: () => void;
 }
 
-export function Header({ title, breadcrumbs, onLogout }: HeaderProps) {
+export function Header({ title, breadcrumbs, centerContent, onLogout }: HeaderProps) {
   const { t, i18n } = useTranslation();
   const safeT = (key: string, options?: any) => String(typeof t === 'function' ? t(key, options) : key);
   const { theme, toggleTheme } = useTheme();
@@ -59,10 +60,10 @@ export function Header({ title, breadcrumbs, onLogout }: HeaderProps) {
   }, []);
 
   return (
-    <header className="h-24 flex items-center justify-between px-12 bg-white/80 dark:bg-[#080808]/80 backdrop-blur-xl sticky top-0 z-40 border-b border-gray-100 dark:border-white/5 transition-colors duration-300">
-      <div className="flex flex-col">
+    <header className="h-16 flex items-center justify-between px-8 bg-white/80 dark:bg-[#080808]/80 backdrop-blur-xl sticky top-0 z-40 border-b border-gray-100 dark:border-white/5 transition-colors duration-300">
+      <div className="flex flex-col shrink-0">
         {breadcrumbs && breadcrumbs.length > 0 && (
-          <div className="flex items-center gap-2 text-[10px] text-gray-400 mb-1 uppercase font-bold tracking-widest leading-none">
+          <div className="flex items-center gap-2 text-[10px] text-gray-400 mb-0.5 uppercase font-bold tracking-widest leading-none">
             {breadcrumbs.map((crumb, i) => (
               <React.Fragment key={crumb}>
                 <span>{crumb}</span>
@@ -71,10 +72,16 @@ export function Header({ title, breadcrumbs, onLogout }: HeaderProps) {
             ))}
           </div>
         )}
-        <h2 className="text-lg md:text-xl font-display font-black text-black dark:text-white uppercase tracking-tighter">{title}</h2>
+        <h2 className="text-base font-display font-black text-black dark:text-white uppercase tracking-tighter">{title}</h2>
       </div>
 
-      <div className="flex items-center gap-6">
+      {centerContent && (
+        <div className="absolute left-1/2 -translate-x-1/2">
+          {centerContent}
+        </div>
+      )}
+
+      <div className="flex items-center gap-4 shrink-0">
         {/* Search Bar */}
         <button 
           onClick={() => setShowSearch(true)}
@@ -274,13 +281,13 @@ function NotificationPanel({ isOpen, onClose }: { isOpen: boolean, onClose: () =
     <AnimatePresence>
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-40 bg-black/0 cursor-default pointer-events-auto" onClick={onClose} />
+          <div className="fixed inset-0 z-[90] bg-black/0 cursor-default pointer-events-auto" onClick={onClose} />
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95, filter: 'blur(10px)' }}
             animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
             exit={{ opacity: 0, y: 20, scale: 0.95, filter: 'blur(10px)' }}
             transition={{ type: "spring", damping: 25, stiffness: 350 }}
-            className="absolute top-full mt-4 right-0 w-80 bg-white/90 dark:bg-[#0c0c0c]/90 backdrop-blur-2xl border border-gray-200/50 dark:border-white/10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] z-50 overflow-hidden pointer-events-auto"
+            className="absolute top-full mt-4 right-0 w-80 bg-white/90 dark:bg-[#0c0c0c]/90 backdrop-blur-2xl border border-gray-200/50 dark:border-white/10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] z-[100] overflow-hidden pointer-events-auto"
           >
             <div className="p-6 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Activity Center</span>
@@ -351,13 +358,13 @@ function ProfileMenu({ isOpen, onClose, onLogout }: { isOpen: boolean, onClose: 
     <AnimatePresence>
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-40 bg-black/0 cursor-default pointer-events-auto" onClick={onClose} />
+          <div className="fixed inset-0 z-[90] bg-black/0 cursor-default pointer-events-auto" onClick={onClose} />
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95, filter: 'blur(10px)' }}
             animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
             exit={{ opacity: 0, y: 20, scale: 0.95, filter: 'blur(10px)' }}
             transition={{ type: "spring", damping: 25, stiffness: 350 }}
-            className="absolute top-full mt-4 right-0 w-80 bg-white/95 dark:bg-[#0c0c0c]/95 backdrop-blur-2xl border border-gray-200/50 dark:border-white/10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-50 overflow-hidden pointer-events-auto"
+            className="absolute top-full mt-4 right-0 w-80 bg-white/95 dark:bg-[#0c0c0c]/95 backdrop-blur-2xl border border-gray-200/50 dark:border-white/10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-[100] overflow-hidden pointer-events-auto"
           >
             <div className="relative p-8 border-b border-gray-100 dark:border-white/5 overflow-hidden group">
               <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/20 transition-all duration-700" />

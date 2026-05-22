@@ -5,7 +5,7 @@ import {
   listProducts, getProduct, createProduct, updateProduct,
   deleteProduct, transitionLifecycle,
 } from '@/lib/api/products';
-import type { CreateProductDto, ProductsListParams, LifecycleTransitionDto } from '@/lib/api/types';
+import type { CreateProductDto, UpdateProductDto, ProductsListParams, LifecycleTransitionDto } from '@/lib/api/types';
 
 export function useProduct(id: string) {
   return useQuery({
@@ -33,7 +33,7 @@ export function useCreateProduct() {
 export function useUpdateProduct() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<CreateProductDto> }) =>
+    mutationFn: ({ id, updates }: { id: string; updates: UpdateProductDto }) =>
       updateProduct(id, updates),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['products'] }),
   });

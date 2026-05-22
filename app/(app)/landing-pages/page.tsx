@@ -1,5 +1,5 @@
-import { LandingPagesView } from '@/components/views/landing-pages';
+import { LandingPageSelector } from '@/components/views/landing-pages/selector';
 
 export default function LandingPagesPage() {
-  return <LandingPagesView />;
+  return <LandingPageSelector />;
 }

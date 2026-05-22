@@ -19,9 +19,9 @@ import { useProducts } from '@/lib/hooks/use-products';
 export function ProductSearch({ onSelectProduct }: ProductSearchProps) {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
-  const { data: products = [], isLoading } = useProducts();
-  
-  const filteredProducts = query 
+  const { data: listResponse, isLoading } = useProducts();
+  const products = listResponse?.data ?? [];
+  const filteredProducts = query
     ? products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) || p.sku.toLowerCase().includes(query.toLowerCase()))
     : products.slice(0, 3);
 

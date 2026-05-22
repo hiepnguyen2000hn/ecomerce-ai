@@ -5,7 +5,25 @@
       "Bash(npm run *)",
       "WebFetch(domain:10.1.4.98)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "WebFetch(domain:54.254.133.114)",
+      "Bash(curl -s \"http://54.254.133.114/docs-json\" --max-time 15)",
+      "Bash(python -c ' *)",
+      "Skill(superpowers:using-git-worktrees)",
+      "Bash(git worktree *)",
+      "Bash(npm install *)",
+      "Skill(superpowers:executing-plans)",
+      "Skill(superpowers:brainstorming)",
+      "Skill(frontend-design)",
+      "Bash(npx tsc *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(npx next *)",
+      "Bash(find \"app/\\(app\\)\" app/login -type f)",
+      "Bash(dir /s /b \"app\\\\\\(app\\)\" \"app\\\\login\")",
+      "Skill(superpowers:writing-plans)",
+      "Bash(xargs wc -l)",
+      "Bash(mkdir -p \"C:\\\\code\\\\ecomerce-ai\\\\app\\\\\\(app\\)\\\\inventory\\\\[id]\\\\analytics\")"
     ]
   }
 }

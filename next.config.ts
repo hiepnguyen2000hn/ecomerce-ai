@@ -33,6 +33,9 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       ...(apiPattern ? [apiPattern] : []),
+      // Catch-all for /static/* on any backend host — handles IP changes without restart
+      { protocol: 'http',  hostname: '**', pathname: '/static/**' },
+      { protocol: 'https', hostname: '**', pathname: '/static/**' },
       {
         protocol: 'https',
         hostname: 'picsum.photos',

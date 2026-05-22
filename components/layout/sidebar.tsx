@@ -44,7 +44,7 @@ export function Sidebar() {
     )}>
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3 top-10 flex h-6 w-6 items-center justify-center rounded-full bg-white dark:bg-[#111] border border-gray-200 dark:border-white/10 shadow-sm text-gray-500 hover:text-black dark:hover:text-white z-50 transition-colors"
+        className="absolute -right-3 top-5 flex h-6 w-6 items-center justify-center rounded-full bg-white dark:bg-[#111] border border-gray-200 dark:border-white/10 shadow-sm text-gray-500 hover:text-black dark:hover:text-white z-50 transition-colors"
       >
         {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
@@ -104,21 +104,7 @@ export function Sidebar() {
       </nav>
 
       {!isCollapsed && (
-        <div className="px-4 mt-auto space-y-4">
-          <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/5">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{t('nav.storage')}</p>
-            <div className="h-1.5 w-full bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden mb-2">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: '65%' }}
-                className="h-full bg-black dark:bg-white"
-              />
-            </div>
-            <div className="flex justify-between items-center text-[9px] font-mono opacity-50">
-              <span>6.5GB / 10GB</span>
-              <span>65%</span>
-            </div>
-          </div>
+        <div className="px-4 mt-auto">
           <button
             onClick={logout}
             className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-2xl transition-all text-xs font-bold uppercase tracking-widest"

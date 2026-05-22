@@ -8,6 +8,7 @@ import { useInitAuth } from '@/lib/hooks/use-auth';
 import { getToken } from '@/lib/api/client';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
+import { AdsCommandTabs } from '@/components/layout/ads-command-tabs';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function getHeaderInfo(pathname: string): { title: string; breadcrumbs: string[] } {
@@ -19,6 +20,8 @@ function getHeaderInfo(pathname: string): { title: string; breadcrumbs: string[]
     return { title: 'Product Management', breadcrumbs: [] };
   if (pathname.startsWith('/dashboard'))
     return { title: 'Dashboard', breadcrumbs: [] };
+  if (/^\/landing-pages\/[^/]+/.test(pathname))
+    return { title: 'Landing Pages', breadcrumbs: ['Landing Pages', 'Portfolio'] };
   if (pathname.startsWith('/landing-pages'))
     return { title: 'Landing Pages', breadcrumbs: [] };
   if (pathname.startsWith('/ads-command'))
@@ -57,7 +60,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar />
 
       <main className="flex-1 flex flex-col overflow-hidden relative">
-        <Header title={title} breadcrumbs={breadcrumbs} />
+        <Header
+          title={title}
+          breadcrumbs={breadcrumbs}
+          centerContent={pathname.startsWith('/ads-command') ? <AdsCommandTabs /> : undefined}
+        />
 
         <div className="flex-1 overflow-y-auto no-scrollbar relative">
           <AnimatePresence mode="wait">

@@ -1,11 +1,11 @@
 import { apiClient } from './client';
 import type {
-  ApiProduct, CreateProductDto, ProductsListParams, ProductsListResponse,
+  ApiProduct, CreateProductDto, UpdateProductDto, ProductsListParams, ProductsListResponse,
   LifecycleTransitionDto, CreateVariantGroupDto, UpdateVariantGroupDto,
   CreateVariantDto, UpdateVariantDto,
 } from './types';
 
-export async function listProducts(params: ProductsListParams = {}): Promise<ApiProduct[]> {
+export async function listProducts(params: ProductsListParams = {}): Promise<ProductsListResponse> {
   const qs = new URLSearchParams();
   if (params.page)      qs.set('page',     String(params.page));
   if (params.pageSize)  qs.set('pageSize', String(params.pageSize));
@@ -16,18 +16,23 @@ export async function listProducts(params: ProductsListParams = {}): Promise<Api
   params.market?.forEach(m         => qs.append('market', m));
   if (params.includeDeleted)        qs.set('includeDeleted', 'true');
   const query = qs.toString() ? `?${qs}` : '';
-  const res = await apiClient.get<ProductsListResponse>(`/api/v1/products${query}`);
-  return res.data;
+  return apiClient.get<ProductsListResponse>(`/api/v1/products${query}`);
 }
 
-export const getProduct     = (id: string): Promise<ApiProduct> =>
-  apiClient.get(`/api/v1/products/${id}`);
+export const getProduct = async (id: string): Promise<ApiProduct> => {
+  const res = await apiClient.get<{ data: ApiProduct }>(`/api/v1/products/${id}`);
+  return res.data;
+};
 
-export const createProduct  = (dto: CreateProductDto): Promise<ApiProduct> =>
-  apiClient.post('/api/v1/products', dto);
+export const createProduct = async (dto: CreateProductDto): Promise<ApiProduct> => {
+  const res = await apiClient.post<{ data: ApiProduct }>('/api/v1/products', dto);
+  return res.data;
+};
 
-export const updateProduct  = (id: string, dto: Partial<CreateProductDto>): Promise<ApiProduct> =>
-  apiClient.patch(`/api/v1/products/${id}`, dto);
+export const updateProduct = async (id: string, dto: UpdateProductDto): Promise<ApiProduct> => {
+  const res = await apiClient.patch<{ data: ApiProduct }>(`/api/v1/products/${id}`, dto);
+  return res.data;
+};
 
 export const deleteProduct  = (id: string): Promise<void> =>
   apiClient.delete(`/api/v1/products/${id}`);
