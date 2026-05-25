@@ -9,8 +9,15 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { useUpdateProduct } from '@/lib/hooks/use-products';
-import { uploadProductImage } from '@/lib/api/products';
+import { uploadFiles } from '@/lib/api/file-storage';
 import { showToast } from '@/lib/toast';
+
+interface ImageEntry {
+  file: File;
+  previewUrl: string;
+  storageId: string;
+  uploading: boolean;
+}
 
 const DEFAULT_IMAGE = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800' viewBox='0 0 800 800'%3E%3Crect width='800' height='800' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='system-ui' font-size='80' fill='%23d1d5db'%3E📦%3C/text%3E%3C/svg%3E`;
 
@@ -23,6 +30,8 @@ interface LocalVariantOption {
   stock: string;
   imagePreview?: string;
   imageFile?: File;
+  imageStorageId?: string;
+  imageUploading?: boolean;
 }
 
 interface LocalVariantGroup {
@@ -56,6 +65,7 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
       : [];
 
   const [selectedImage, setSelectedImage] = useState(0);
+  const [newImages, setNewImages] = useState<ImageEntry[]>([]);
 
   // Variant groups: initialise from API data
   const [variantGroups, setVariantGroups] = useState<LocalVariantGroup[]>(
@@ -121,12 +131,65 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
     }));
   };
 
-  const handleVariantImageChange = (groupId: string, optId: string, file: File) => {
+  const handleVariantImageChange = async (groupId: string, optId: string, file: File) => {
     const preview = URL.createObjectURL(file);
     setVariantGroups(prev => prev.map(g => g.id !== groupId ? g : {
       ...g,
-      options: g.options.map(o => o.id !== optId ? o : { ...o, imagePreview: preview, imageFile: file }),
+      options: g.options.map(o => o.id !== optId ? o : { ...o, imagePreview: preview, imageFile: file, imageUploading: true }),
     }));
+
+    try {
+      const [stored] = await uploadFiles([file]);
+      URL.revokeObjectURL(preview);
+      setVariantGroups(prev => prev.map(g => g.id !== groupId ? g : {
+        ...g,
+        options: g.options.map(o => o.id !== optId ? o : {
+          ...o,
+          imagePreview: stored.url,
+          imageStorageId: stored.id,
+          imageUploading: false,
+        }),
+      }));
+    } catch {
+      setVariantGroups(prev => prev.map(g => g.id !== groupId ? g : {
+        ...g,
+        options: g.options.map(o => o.id !== optId ? o : { ...o, imageUploading: false }),
+      }));
+      showToast.error('Failed to upload variant image');
+    }
+  };
+
+  const handleProductImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const newFiles = Array.from(files);
+    e.target.value = '';
+
+    const tempEntries: ImageEntry[] = newFiles.map(file => ({
+      file,
+      previewUrl: URL.createObjectURL(file),
+      storageId: '',
+      uploading: true,
+    }));
+    setNewImages(prev => [...prev, ...tempEntries]);
+
+    try {
+      const stored = await uploadFiles(newFiles);
+      setNewImages(prev => {
+        const result = [...prev];
+        newFiles.forEach((file, i) => {
+          const idx = result.findIndex(e => e.file === file && e.uploading);
+          if (idx !== -1 && stored[i]) {
+            URL.revokeObjectURL(result[idx].previewUrl);
+            result[idx] = { ...result[idx], previewUrl: stored[i].url, storageId: stored[i].id, uploading: false };
+          }
+        });
+        return result;
+      });
+    } catch {
+      setNewImages(prev => prev.map(e => newFiles.includes(e.file) ? { ...e, uploading: false } : e));
+      showToast.error('Failed to upload image');
+    }
   };
 
   // ── Save ─────────────────────────────────────────────────────
@@ -136,6 +199,9 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
       return;
     }
     try {
+      // New file-storage URLs to add (only fully uploaded)
+      const newImageUrls = newImages.filter(img => img.storageId).map(img => img.previewUrl);
+
       await submitUpdate({
         id: product.id,
         updates: {
@@ -145,6 +211,7 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
           retailPriceCurrency: retailPrice !== '' ? (product.retailPriceCurrency ?? 'USD') : undefined,
           cogsAmount: cogsAmount !== '' ? Number(cogsAmount) : undefined,
           cogsCurrency: cogsAmount !== '' ? (product.cogsCurrency ?? 'USD') : undefined,
+          imageUrls: newImageUrls.length > 0 ? newImageUrls : undefined,
           variantGroups: variantGroups.map((group, gi) => ({
             id: group.apiId,
             name: group.name,
@@ -155,16 +222,12 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
               priceAmount: opt.price ? parseFloat(opt.price) : undefined,
               stockQty: opt.stock ? parseInt(opt.stock, 10) : undefined,
               position: oi,
+              // Pass file-storage URL only when newly uploaded (has storageId)
+              imageUrl: opt.imageStorageId ? opt.imagePreview : undefined,
             })),
           })),
         },
       });
-
-      // Upload any newly-selected variant images
-      const variantImageUploads = variantGroups.flatMap(g => g.options).filter(o => o.imageFile);
-      for (const opt of variantImageUploads) {
-        await uploadProductImage(product.id, opt.imageFile!, opt.name, false);
-      }
 
       showToast.success('Product updated');
       onBack();
@@ -173,7 +236,8 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
     }
   };
 
-  const displayImage = resolvedImages.length > 0 ? resolvedImages[selectedImage] : DEFAULT_IMAGE;
+  const allDisplayImages = [...resolvedImages, ...newImages.map(n => n.previewUrl)];
+  const displayImage = allDisplayImages.length > 0 ? allDisplayImages[selectedImage] : DEFAULT_IMAGE;
 
   return (
     <div className="flex flex-col h-full bg-[#f8f9fc] dark:bg-[#050505] overflow-y-auto no-scrollbar">
@@ -228,26 +292,49 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
                 fill
                 className="object-contain"
                 referrerPolicy="no-referrer"
-                unoptimized={displayImage.startsWith('data:')}
+                unoptimized
               />
             </motion.div>
           </div>
 
           <div className="flex items-center gap-4 mt-8 flex-wrap">
-            {resolvedImages.map((img, i) => (
-              <button
-                key={i}
-                onClick={() => setSelectedImage(i)}
-                className={cn(
-                  'relative w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all p-0.5 shrink-0',
-                  selectedImage === i ? 'border-blue-600' : 'border-gray-100 dark:border-white/5 opacity-60 hover:opacity-100',
-                )}
-              >
-                <div className="relative w-full h-full rounded-[14px] overflow-hidden bg-gray-50 dark:bg-black">
-                  <Image src={img} alt="" fill className="object-cover" referrerPolicy="no-referrer" />
+            {allDisplayImages.map((img, i) => {
+              const isNew = i >= resolvedImages.length;
+              const newEntry = isNew ? newImages[i - resolvedImages.length] : null;
+              return (
+                <div key={i} className="relative shrink-0">
+                  <button
+                    onClick={() => setSelectedImage(i)}
+                    className={cn(
+                      'relative w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all p-0.5',
+                      selectedImage === i ? 'border-blue-600' : 'border-gray-100 dark:border-white/5 opacity-60 hover:opacity-100',
+                    )}
+                  >
+                    <div className="relative w-full h-full rounded-[14px] overflow-hidden bg-gray-50 dark:bg-black">
+                      <Image src={img} alt="" fill className="object-cover" referrerPolicy="no-referrer" unoptimized />
+                      {newEntry?.uploading && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                  {isNew && (
+                    <button
+                      onClick={() => {
+                        const entry = newImages[i - resolvedImages.length];
+                        if (entry?.previewUrl.startsWith('blob:')) URL.revokeObjectURL(entry.previewUrl);
+                        setNewImages(prev => prev.filter((_, j) => j !== i - resolvedImages.length));
+                        setSelectedImage(prev => Math.max(0, prev >= i && prev > 0 ? prev - 1 : prev));
+                      }}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white z-10 transition-colors"
+                    >
+                      <X size={10} />
+                    </button>
+                  )}
                 </div>
-              </button>
-            ))}
+              );
+            })}
             <button
               onClick={() => fileInputRef.current?.click()}
               className="flex flex-col items-center justify-center w-20 h-20 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800 text-gray-400 hover:border-blue-600 hover:text-blue-600 transition-all gap-1"
@@ -257,7 +344,7 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
             </button>
           </div>
 
-          <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" />
+          <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleProductImageUpload} />
         </motion.div>
 
         {/* Right: Form */}
@@ -401,7 +488,7 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
                                 alt={opt.name}
                                 fill
                                 className="object-cover"
-                                unoptimized={opt.imagePreview.startsWith('blob:')}
+                                unoptimized
                               />
                             ) : (
                               <span className="font-black text-[10px] tracking-tighter text-gray-600 dark:text-gray-400 uppercase group-hover/img:opacity-0 transition-opacity">
@@ -410,9 +497,12 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
                             )}
                             <div className={cn(
                               'absolute inset-0 flex items-center justify-center bg-black/50 transition-opacity',
-                              opt.imagePreview ? 'opacity-0 group-hover/img:opacity-100' : 'opacity-0 group-hover/img:opacity-100',
+                              opt.imageUploading ? 'opacity-100' : 'opacity-0 group-hover/img:opacity-100',
                             )}>
-                              <ImageIcon size={16} className="text-white" />
+                              {opt.imageUploading
+                                ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                : <ImageIcon size={16} className="text-white" />
+                              }
                             </div>
                           </button>
                           <input

@@ -56,6 +56,7 @@ function ProductImage({ src, alt, className }: { src: string | null | undefined;
       src={src}
       alt={alt}
       fill
+      unoptimized
       className="object-cover group-hover:scale-110 transition-transform duration-1000 ease-out grayscale group-hover:grayscale-0"
       referrerPolicy="no-referrer"
       onError={() => setFailed(true)}

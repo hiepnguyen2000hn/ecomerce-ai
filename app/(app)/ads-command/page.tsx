@@ -11,19 +11,25 @@ const STORAGE_KEY = 'ads_connection';
 export default function AdsCommandPage() {
   const [connection, setConnection] = useAtom(adsConnectionAtom);
   const [mounted, setMounted] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setConnection(JSON.parse(raw) as AdsConnection);
+      if (raw) {
+        const parsed = JSON.parse(raw) as AdsConnection;
+        setConnection(parsed);
+        // If already connected from a previous session, go straight to dashboard
+        if (parsed.meta || parsed.sheets) setShowDashboard(true);
+      }
     } catch { /* ignore */ }
     setMounted(true);
   }, [setConnection]);
 
   if (!mounted) return null;
 
-  if (!connection.meta && !connection.sheets) {
-    return <AdsConnectView />;
+  if (!showDashboard) {
+    return <AdsConnectView onGotoDashboard={() => setShowDashboard(true)} />;
   }
 
   return <AdsCommandView />;

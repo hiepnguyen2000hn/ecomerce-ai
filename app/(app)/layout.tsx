@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAtomValue } from 'jotai';
-import { currentUserAtom } from '@/lib/store';
+import { currentUserAtom, adsConnectionAtom } from '@/lib/store';
 import { useInitAuth } from '@/lib/hooks/use-auth';
 import { getToken } from '@/lib/api/client';
 import { Sidebar } from '@/components/layout/sidebar';
@@ -35,6 +35,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const currentUser = useAtomValue(currentUserAtom);
+  const adsConnection = useAtomValue(adsConnectionAtom);
   const { isLoading: authLoading } = useInitAuth();
 
   useEffect(() => {
@@ -63,7 +64,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <Header
           title={title}
           breadcrumbs={breadcrumbs}
-          centerContent={pathname.startsWith('/ads-command') ? <AdsCommandTabs /> : undefined}
+          centerContent={pathname.startsWith('/ads-command') && (adsConnection.meta || adsConnection.sheets) ? <AdsCommandTabs /> : undefined}
         />
 
         <div className="flex-1 overflow-y-auto no-scrollbar relative">

@@ -7,7 +7,15 @@ import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { useCreateProduct } from '@/lib/hooks/use-products';
 import { createVariantGroup } from '@/lib/api/products';
+import { uploadFiles } from '@/lib/api/file-storage';
 import { showToast } from '@/lib/toast';
+
+interface ImageEntry {
+  file: File;
+  previewUrl: string;
+  storageId: string;
+  uploading: boolean;
+}
 
 interface VariantOption {
   id: string;
@@ -38,7 +46,7 @@ export function ProductCreate({ onBack }: ProductCreateProps) {
   const [retailPrice, setRetailPrice] = useState('');
   const [cogsAmount, setCogsAmount] = useState('');
   const [variantGroups, setVariantGroups] = useState<VariantGroup[]>([]);
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<ImageEntry[]>([]);
   const [selectedImage, setSelectedImage] = useState(0);
 
   const addVariantGroup = () => {
@@ -90,6 +98,9 @@ export function ProductCreate({ onBack }: ProductCreateProps) {
       return;
     }
     try {
+      // Collect file-storage URLs (only fully uploaded images)
+      const imageUrls = images.filter(img => img.storageId).map(img => img.previewUrl);
+
       const product = await submitCreate({
         name: name.trim(),
         sku: sku.trim(),
@@ -98,6 +109,7 @@ export function ProductCreate({ onBack }: ProductCreateProps) {
         retailPriceCurrency: retailPrice ? 'USD' : undefined,
         cogsAmount: cogsAmount ? parseFloat(cogsAmount) : undefined,
         cogsCurrency: cogsAmount ? 'USD' : undefined,
+        imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
       });
       for (const group of variantGroups) {
         await createVariantGroup(product.id, {
@@ -117,13 +129,46 @@ export function ProductCreate({ onBack }: ProductCreateProps) {
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    Array.from(files).forEach(file => {
-      const url = URL.createObjectURL(file);
-      setImages(prev => [...prev, url]);
+    const newFiles = Array.from(files);
+    e.target.value = '';
+
+    const tempEntries: ImageEntry[] = newFiles.map(file => ({
+      file,
+      previewUrl: URL.createObjectURL(file),
+      storageId: '',
+      uploading: true,
+    }));
+    setImages(prev => [...prev, ...tempEntries]);
+
+    try {
+      const stored = await uploadFiles(newFiles);
+      setImages(prev => {
+        const result = [...prev];
+        newFiles.forEach((file, i) => {
+          const idx = result.findIndex(e => e.file === file && e.uploading);
+          if (idx !== -1 && stored[i]) {
+            URL.revokeObjectURL(result[idx].previewUrl);
+            result[idx] = { ...result[idx], previewUrl: stored[i].url, storageId: stored[i].id, uploading: false };
+          }
+        });
+        return result;
+      });
+    } catch {
+      setImages(prev => prev.map(e => newFiles.includes(e.file) ? { ...e, uploading: false } : e));
+      showToast.error('Failed to upload image');
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImages(prev => {
+      const entry = prev[index];
+      if (entry?.previewUrl.startsWith('blob:')) URL.revokeObjectURL(entry.previewUrl);
+      return prev.filter((_, i) => i !== index);
     });
+    setSelectedImage(prev => (prev >= index && prev > 0 ? prev - 1 : prev));
   };
 
   return (
@@ -182,10 +227,15 @@ export function ProductCreate({ onBack }: ProductCreateProps) {
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={images[selectedImage]}
+                  src={images[selectedImage]?.previewUrl}
                   alt="Product preview"
                   className="w-full h-full object-contain"
                 />
+                {images[selectedImage]?.uploading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-black/50 rounded-[32px]">
+                    <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
               </motion.div>
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-gray-300 dark:text-gray-700">
@@ -199,19 +249,31 @@ export function ProductCreate({ onBack }: ProductCreateProps) {
 
           <div className="flex items-center gap-4 mt-8 flex-wrap">
             {images.map((img, i) => (
-              <button
-                key={i}
-                onClick={() => setSelectedImage(i)}
-                className={cn(
-                  'relative w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all p-0.5 shrink-0',
-                  selectedImage === i ? 'border-blue-600' : 'border-gray-100 dark:border-white/5 opacity-60 hover:opacity-100',
-                )}
-              >
-                <div className="relative w-full h-full rounded-[14px] overflow-hidden bg-gray-50 dark:bg-black">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img} alt="" className="w-full h-full object-cover" />
-                </div>
-              </button>
+              <div key={i} className="relative shrink-0">
+                <button
+                  onClick={() => setSelectedImage(i)}
+                  className={cn(
+                    'relative w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all p-0.5',
+                    selectedImage === i ? 'border-blue-600' : 'border-gray-100 dark:border-white/5 opacity-60 hover:opacity-100',
+                  )}
+                >
+                  <div className="relative w-full h-full rounded-[14px] overflow-hidden bg-gray-50 dark:bg-black">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={img.previewUrl} alt="" className="w-full h-full object-cover" />
+                    {img.uploading && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                </button>
+                <button
+                  onClick={() => removeImage(i)}
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white z-10 transition-colors"
+                >
+                  <X size={10} />
+                </button>
+              </div>
             ))}
             <button
               onClick={() => fileInputRef.current?.click()}

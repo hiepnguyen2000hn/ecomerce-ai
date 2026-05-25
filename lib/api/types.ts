@@ -99,6 +99,8 @@ export interface CreateProductDto {
   retailPriceAmount?: number;
   retailPriceCurrency?: string;
   marketCodes?: string[];
+  /** URLs returned by POST /file-storage/upload. First URL becomes primary image. */
+  imageUrls?: string[];
 }
 
 export interface UpdateProductVariantDto {
@@ -131,6 +133,8 @@ export interface UpdateProductDto {
   retailPriceCurrency?: string;
   marketCodes?: string[];
   variantGroups?: UpdateProductVariantGroupDto[];
+  /** URLs returned by POST /file-storage/upload. First URL becomes primary image. */
+  imageUrls?: string[];
 }
 
 export interface ProductsListParams {
