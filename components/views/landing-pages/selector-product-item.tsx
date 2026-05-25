@@ -29,6 +29,7 @@ function ProductThumb({ src, alt }: { src: string | null | undefined; alt: strin
       src={src}
       alt={alt}
       fill
+      unoptimized
       className="object-cover group-hover:scale-110 transition-transform duration-700"
       referrerPolicy="no-referrer"
       onError={() => setFailed(true)}
