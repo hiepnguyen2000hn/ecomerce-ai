@@ -11,13 +11,12 @@ import {
   Zap,
   ArrowRight,
   Loader2,
-  RefreshCw,
   FileText,
   AlertTriangle,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ApiProduct, CreateLpBatchDto } from '@/lib/api/types';
-import { pickGoogleDriveFileWithCode, type DriveFile } from '@/lib/google-drive';
+import { pickGoogleDriveFile, pickMoreDriveFiles, hasDriveToken, loadGoogleDriveSdk, type DriveFile } from '@/lib/google-drive';
 import { useCreateLpBatch, useLpBatchLogStream } from '@/lib/hooks/use-lp-batch';
 import { getBatchGeneratedLandingPages } from '@/lib/api/lp-batch';
 import { useTopLpTemplates } from '@/lib/hooks/use-lp-templates';
@@ -39,9 +38,8 @@ export function BatchGenerationModal({ product, isOpen, onClose, onConfirm }: Ba
   const [count, setCount] = useState(3);
   const [lang, setLang] = useState('en-US');
 
-  // Drive state — populated immediately when user selects Drive option
-  const [driveFile, setDriveFile] = useState<DriveFile | null>(null);
-  const [driveAuthCode, setDriveAuthCode] = useState<string | null>(null);
+  // Drive state
+  const [driveFiles, setDriveFiles] = useState<DriveFile[]>([]);
   const [driveLoading, setDriveLoading] = useState(false);
   const [driveError, setDriveError] = useState<string | null>(null);
 
@@ -59,6 +57,10 @@ export function BatchGenerationModal({ product, isOpen, onClose, onConfirm }: Ba
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [logs]);
+
+  useEffect(() => {
+    if (isOpen) loadGoogleDriveSdk();
+  }, [isOpen]);
 
   // When SSE done → fetch generated LPs → log → navigate
   useEffect(() => {
@@ -90,9 +92,8 @@ export function BatchGenerationModal({ product, isOpen, onClose, onConfirm }: Ba
     setDriveLoading(true);
     setDriveError(null);
     try {
-      const { authCode, file } = await pickGoogleDriveFileWithCode();
-      setDriveFile(file);
-      setDriveAuthCode(authCode);
+      const files = await pickGoogleDriveFile();
+      setDriveFiles(files);
     } catch (err) {
       if (err instanceof Error && err.message === 'cancelled') return;
       setDriveError(err instanceof Error ? err.message : 'Failed to connect to Google Drive');
@@ -101,15 +102,34 @@ export function BatchGenerationModal({ product, isOpen, onClose, onConfirm }: Ba
     }
   };
 
+  const addMoreDriveFiles = async () => {
+    setDriveLoading(true);
+    setDriveError(null);
+    try {
+      const newFiles = hasDriveToken() ? await pickMoreDriveFiles() : await pickGoogleDriveFile();
+      setDriveFiles(prev => {
+        const ids = new Set(prev.map(f => f.id));
+        return [...prev, ...newFiles.filter(f => !ids.has(f.id))];
+      });
+    } catch (err) {
+      if (err instanceof Error && err.message === 'cancelled') return;
+      setDriveError(err instanceof Error ? err.message : 'Failed to pick files');
+    } finally {
+      setDriveLoading(false);
+    }
+  };
+
+  const removeDriveFile = (id: string) => {
+    setDriveFiles(prev => prev.filter(f => f.id !== id));
+  };
+
   const handleSelectSource = async (next: 'ai' | 'drive') => {
     setSource(next);
     if (next === 'drive') {
-      setDriveFile(null);
-      setDriveAuthCode(null);
+      setDriveFiles([]);
       await openDrivePicker();
     } else {
-      setDriveFile(null);
-      setDriveAuthCode(null);
+      setDriveFiles([]);
       setDriveError(null);
     }
   };
@@ -122,7 +142,7 @@ export function BatchGenerationModal({ product, isOpen, onClose, onConfirm }: Ba
       return;
     }
 
-    if (source === 'drive' && !driveFile) {
+    if (source === 'drive' && driveFiles.length === 0) {
       setSubmitError('Please connect a Google Drive file first.');
       return;
     }
@@ -134,9 +154,8 @@ export function BatchGenerationModal({ product, isOpen, onClose, onConfirm }: Ba
       contentSource: source === 'drive' ? 'GOOGLE_DRIVE' : 'AI_AUTO',
       templateStrategy: strategy === 'manual' ? 'MANUAL' : 'AI_OPTIMIZE',
       ...(strategy === 'manual' && { templateIds: selectedTemplateIds }),
-      ...(source === 'drive' && driveFile && {
-        driveFileIds: [driveFile.id],
-        driveAuthCode: driveAuthCode ?? undefined,
+      ...(source === 'drive' && driveFiles.length > 0 && {
+        driveFileIds: driveFiles.map(f => f.id),
       }),
     };
 
@@ -153,7 +172,7 @@ export function BatchGenerationModal({ product, isOpen, onClose, onConfirm }: Ba
   if (!isOpen) return null;
 
   const isSubmitting = createBatchMutation.isPending;
-  const submitDisabled = isSubmitting || driveLoading || (source === 'drive' && !driveFile);
+  const submitDisabled = isSubmitting || driveLoading || (source === 'drive' && driveFiles.length === 0);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
@@ -358,21 +377,31 @@ export function BatchGenerationModal({ product, isOpen, onClose, onConfirm }: Ba
             </div>
 
             {/* Drive file status */}
-            {source === 'drive' && driveFile && (
-              <div className="flex items-center justify-between px-4 py-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl">
-                <div className="flex items-center gap-3">
-                  <FileText size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 truncate max-w-xs">
-                    {driveFile.name}
-                  </p>
+            {source === 'drive' && driveFiles.length > 0 && (
+              <div className="space-y-3">
+                <div className="px-4 py-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl space-y-1.5">
+                  {driveFiles.map(f => (
+                    <div key={f.id} className="flex items-center gap-2">
+                      <FileText size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 truncate flex-1">
+                        {f.name}
+                      </p>
+                      <button
+                        onClick={() => removeDriveFile(f.id)}
+                        className="p-0.5 text-emerald-400 hover:text-red-500 transition-colors shrink-0"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
                 <button
-                  onClick={openDrivePicker}
+                  onClick={addMoreDriveFiles}
                   disabled={driveLoading}
-                  className="flex items-center gap-1.5 text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest hover:opacity-70 transition-opacity shrink-0 ml-3"
+                  className="flex items-center gap-1.5 text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest hover:opacity-70 transition-opacity px-4"
                 >
-                  <RefreshCw size={12} className={driveLoading ? 'animate-spin' : ''} />
-                  Change
+                  {driveLoading ? <Loader2 size={12} className="animate-spin" /> : <ArrowRight size={12} />}
+                  Add more files
                 </button>
               </div>
             )}
@@ -383,9 +412,9 @@ export function BatchGenerationModal({ product, isOpen, onClose, onConfirm }: Ba
               </p>
             )}
 
-            {source === 'drive' && !driveFile && !driveLoading && !driveError && (
+            {source === 'drive' && driveFiles.length === 0 && !driveLoading && !driveError && (
               <p className="text-[10px] font-bold text-amber-500 uppercase tracking-wider px-1">
-                No file selected — click Google Drive to pick a file.
+                No file selected — click Google Drive to pick files.
               </p>
             )}
           </div>
