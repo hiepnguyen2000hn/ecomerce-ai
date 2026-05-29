@@ -4,7 +4,7 @@ module.exports = {
       name: 'levelup-fe',
       script: 'node_modules/next/dist/bin/next',
       args: 'start -p 3007',
-      cwd: '/var/www/levelup_fe',
+      cwd: '/var/www/levelup.relipasoft.com/html/levelup/levelup_fe',
       instances: 1,
       autorestart: true,
       watch: false,
