@@ -2,9 +2,9 @@ module.exports = {
   apps: [
     {
       name: 'levelup-fe',
-      script: 'node_modules/.bin/next',
+      script: 'node_modules/next/dist/bin/next',
       args: 'start -p 3007',
-      cwd: './',
+      cwd: '/var/www/levelup_fe',
       instances: 1,
       autorestart: true,
       watch: false,
