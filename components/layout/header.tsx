@@ -63,7 +63,7 @@ export function Header({ title, breadcrumbs, centerContent, onLogout }: HeaderPr
     <header className="h-16 flex items-center justify-between px-8 bg-white/80 dark:bg-[#080808]/80 backdrop-blur-xl sticky top-0 z-40 border-b border-gray-100 dark:border-white/5 transition-colors duration-300">
       <div className="flex flex-col shrink-0">
         {breadcrumbs && breadcrumbs.length > 0 && (
-          <div className="flex items-center gap-2 text-[10px] text-gray-400 mb-0.5 uppercase font-bold tracking-widest leading-none">
+          <div className="flex items-center gap-2 text-[10px] text-gray-400 mb-0.5 font-bold tracking-wide leading-none">
             {breadcrumbs.map((crumb, i) => (
               <React.Fragment key={crumb}>
                 <span>{crumb}</span>
@@ -72,7 +72,7 @@ export function Header({ title, breadcrumbs, centerContent, onLogout }: HeaderPr
             ))}
           </div>
         )}
-        <h2 className="text-base font-display font-black text-black dark:text-white uppercase tracking-tighter">{title}</h2>
+        <h2 className="text-base font-display font-black text-black dark:text-white tracking-tighter">{title}</h2>
       </div>
 
       {centerContent && (

@@ -96,7 +96,7 @@ export function Sidebar() {
                 active ? "text-black dark:text-white" : "text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300"
               )} />
               {!isCollapsed && (
-                <span className="text-xs font-bold uppercase tracking-widest whitespace-nowrap overflow-hidden">{item.label}</span>
+                <span className="text-xs font-bold tracking-wide whitespace-nowrap overflow-hidden">{item.label}</span>
               )}
             </button>
           );
@@ -107,7 +107,7 @@ export function Sidebar() {
         <div className="px-4 mt-auto">
           <button
             onClick={logout}
-            className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-2xl transition-all text-xs font-bold uppercase tracking-widest"
+            className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-2xl transition-all text-xs font-bold tracking-wide"
           >
             <LogOut size={16} />
             <span>Logout</span>
